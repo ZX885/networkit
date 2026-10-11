@@ -1,0 +1,84 @@
+/* Кнопки из legacy: .btn, .btn-primary, .btn-ghost, .btn-danger, .btn-sm, .btn-lg */
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: var(--control-md);
+  padding: 0 var(--space-5);
+  border: none;
+  border-radius: var(--radius-md);
+  font-family: var(--font-body);
+  font-size: var(--text-md);
+  font-weight: var(--weight-semibold);
+  line-height: 1.2;
+  white-space: nowrap;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--ease);
+}
+
+.sm {
+  min-height: var(--control-sm);
+  padding: 0 var(--space-4);
+  font-size: var(--text-sm);
+}
+.lg {
+  min-height: var(--control-lg);
+  padding: 0 var(--space-8);
+  font-size: var(--text-base);
+  font-weight: var(--weight-bold);
+}
+.full {
+  width: 100%;
+}
+
+.primary {
+  background: var(--primary);
+  color: var(--on-primary);
+  box-shadow: 0 1px 3px var(--primary-shadow);
+}
+.primary:hover:not(:disabled) {
+  background: var(--primary-hover);
+  color: var(--on-primary);
+  box-shadow: 0 4px 12px var(--primary-shadow);
+  transform: translateY(-1px);
+}
+
+.ghost {
+  background: var(--surface);
+  color: var(--text-secondary);
+  border: 1.5px solid var(--border);
+  box-shadow: var(--shadow-1);
+}
+.ghost:hover:not(:disabled) {
+  background: var(--surface-sunken);
+  border-color: var(--border-strong);
+  color: var(--text);
+}
+
+.danger {
+  background: var(--surface);
+  color: var(--danger);
+  border: 1.5px solid var(--danger-border);
+}
+.danger:hover:not(:disabled) {
+  background: var(--danger-soft);
+}
+
+/* Белая кнопка на синем фоне (legacy .btn-white, блок CTA) */
+.inverse {
+  background: var(--on-primary);
+  color: var(--primary);
+  font-weight: var(--weight-bold);
+}
+.inverse:hover:not(:disabled) {
+  background: var(--primary-soft);
+  color: var(--primary-hover);
+  transform: translateY(-1px);
+}
+
+.button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

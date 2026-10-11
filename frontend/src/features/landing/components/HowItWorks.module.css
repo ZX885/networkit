@@ -1,0 +1,85 @@
+/* legacy .how / .how-steps / .how-step */
+.section {
+  padding: 56px 5%;
+  background: var(--bg);
+}
+
+@media (min-width: 600px) {
+  .section {
+    padding: 100px 6%;
+  }
+}
+
+.inner {
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+.steps {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-5);
+  margin-top: 56px;
+  list-style: none;
+}
+
+@media (min-width: 361px) {
+  .steps {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* от 500px: сколько влезет, и линия между кружками */
+@media (min-width: 500px) {
+  .steps {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 0;
+  }
+  .steps::before {
+    content: '';
+    position: absolute;
+    top: 28px;
+    right: 10%;
+    left: 10%;
+    height: 1px;
+    background: var(--border);
+  }
+}
+
+.step {
+  padding: 0 var(--space-5);
+  text-align: center;
+}
+
+.number {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  margin: 0 auto 18px;
+  border: 2px solid var(--primary);
+  border-radius: 50%;
+  background: var(--surface);
+  box-shadow: var(--shadow-1);
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: var(--weight-extrabold);
+  color: var(--primary);
+}
+
+.stepTitle {
+  margin-bottom: 7px;
+  font-size: 15px;
+}
+
+.stepText {
+  max-width: 180px;
+  margin: 0 auto;
+  font-size: var(--text-sm);
+  line-height: var(--leading-relaxed);
+  color: var(--text-muted);
+}

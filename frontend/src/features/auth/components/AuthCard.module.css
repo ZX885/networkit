@@ -1,0 +1,69 @@
+.wrap {
+  display: flex;
+  min-height: 100vh;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 64px 14px var(--space-8);
+  background: var(--bg);
+}
+
+@media (min-width: 481px) {
+  .wrap {
+    align-items: center;
+    padding: var(--space-20) var(--space-5);
+  }
+}
+
+.card {
+  width: 100%;
+  max-width: 440px;
+  padding: 22px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  background: var(--surface);
+  box-shadow: var(--shadow-3);
+  animation: fadeUp 0.3s both;
+}
+
+@media (min-width: 481px) {
+  .card {
+    padding: var(--space-10);
+    border-radius: var(--radius-2xl);
+  }
+}
+
+.logo {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 28px;
+}
+
+.title {
+  margin-bottom: 6px;
+  font-size: 20px;
+  text-align: center;
+}
+
+.subtitle {
+  margin-bottom: 28px;
+  font-size: var(--text-md);
+  text-align: center;
+  color: var(--text-muted);
+}
+
+@media (min-width: 481px) {
+  .title {
+    font-size: 24px;
+  }
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}

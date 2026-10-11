@@ -1,0 +1,13 @@
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: var(--space-2);
+}
+
+/* поля в сетке без нижнего отступа (он есть у группы), цифры по центру как в legacy */
+.grid > div {
+  margin-bottom: 0;
+}
+.grid input {
+  text-align: center;
+}

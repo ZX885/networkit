@@ -1,0 +1,38 @@
+/*
+  Тёмная тема: только переопределение переменных (значения из `body.dark` в legacy).
+  Атрибут data-theme ставит скрипт в index.html и ThemeProvider.
+*/
+[data-theme='dark'] {
+  color-scheme: dark;
+
+  --bg: #0a0a0a;
+  --surface: #111111;
+  --surface-sunken: #0a0a0a;
+  --input-bg: #0a0a0a;
+  --border: #222222;
+  --border-strong: #2a2a2a;
+
+  --primary-soft: #161620;
+  --primary-soft-strong: #1e1e30;
+
+  --text: #f3f4f6;
+  --text-secondary: #d1d5db;
+  --text-muted: #9ca3af;
+  --text-faint: #6b7280;
+
+  --nav-bg: rgba(10, 10, 10, 0.95);
+  --hero-from: #0a0a0a;
+  --hero-glow: rgba(79, 70, 229, 0.12);
+  --section-alt-bg: #0d0d0d;
+  --feature-card-bg: #1a1d27;
+  --footer-bg: #050505;
+
+  --success-soft: #052e16;
+  --danger-soft: #450a0a;
+  --overlay: rgba(0, 0, 0, 0.7);
+
+  --shadow-1: 0 1px 3px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-2: 0 4px 6px rgba(0, 0, 0, 0.35), 0 2px 4px rgba(0, 0, 0, 0.25);
+  --shadow-3: 0 10px 15px rgba(0, 0, 0, 0.4), 0 4px 6px rgba(0, 0, 0, 0.3);
+  --shadow-4: 0 20px 25px rgba(0, 0, 0, 0.5), 0 8px 10px rgba(0, 0, 0, 0.35);
+}

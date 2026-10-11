@@ -1,0 +1,43 @@
+/* legacy .cta-sec */
+.section {
+  position: relative;
+  padding: 56px 5%;
+  overflow: hidden;
+  background: var(--primary);
+  text-align: center;
+}
+
+@media (min-width: 600px) {
+  .section {
+    padding: 100px 6%;
+  }
+}
+
+.section::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 50%, var(--cta-glow), transparent 70%);
+  pointer-events: none;
+}
+
+.title {
+  position: relative;
+  margin-bottom: 14px;
+  font-size: clamp(24px, 4vw, 52px);
+  font-weight: var(--weight-extrabold);
+  letter-spacing: -0.03em;
+  color: var(--on-primary);
+}
+
+.text {
+  position: relative;
+  max-width: 640px;
+  margin: 0 auto 36px;
+  font-size: var(--text-base);
+  color: var(--on-primary-muted);
+}
+
+.section > button {
+  position: relative;
+}

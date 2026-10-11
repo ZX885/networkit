@@ -1,0 +1,26 @@
+/* legacy .reg-wrap / .reg-con */
+.wrap {
+  display: flex;
+  min-height: 100vh;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 64px 10px var(--space-8);
+  background: var(--bg);
+}
+
+@media (min-width: 500px) {
+  .wrap {
+    padding: var(--space-20) var(--space-4) 60px;
+  }
+}
+
+.container {
+  width: 100%;
+  max-width: 520px;
+}
+
+.logo {
+  display: flex;
+  justify-content: center;
+  margin-bottom: var(--space-4);
+}

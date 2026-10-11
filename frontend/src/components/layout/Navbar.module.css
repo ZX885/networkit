@@ -1,0 +1,86 @@
+/* legacy #nav: фиксированная панель с размытием фона */
+.nav {
+  position: fixed;
+  top: 0;
+  right: 0;
+  left: 0;
+  z-index: var(--z-nav);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: var(--nav-height);
+  padding: 0 4%;
+  border-bottom: 1px solid var(--border);
+  background: var(--nav-bg);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+}
+
+@media (min-width: 768px) {
+  .nav {
+    padding: 0 5%;
+  }
+}
+
+.links {
+  display: none;
+  gap: 28px;
+}
+
+@media (min-width: 768px) {
+  .links {
+    display: flex;
+  }
+}
+
+.link {
+  font-size: var(--text-md);
+  font-weight: var(--weight-medium);
+  color: var(--text-muted);
+}
+.link:hover {
+  color: var(--text);
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* Log in и переключатель темы на телефоне скрыты, как в legacy (там прячутся все ghost-кнопки) */
+.desktopOnly {
+  display: none;
+}
+@media (min-width: 768px) {
+  .desktopOnly {
+    display: inline-flex;
+  }
+}
+
+.actions .themeButton {
+  padding: 0 10px;
+}
+
+.hamburger {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-2);
+  border: none;
+  background: none;
+  cursor: pointer;
+}
+.hamburger span {
+  display: block;
+  width: 20px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--text);
+}
+
+@media (min-width: 768px) {
+  .hamburger {
+    display: none;
+  }
+}

@@ -1,0 +1,55 @@
+/* legacy .nav-logo / .auth-logo / .footer-logo */
+.logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  font-family: var(--font-display);
+  font-weight: var(--weight-extrabold);
+  letter-spacing: -0.03em;
+  color: var(--primary);
+}
+.logo:hover {
+  color: var(--primary);
+}
+
+.icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--primary);
+  color: var(--on-primary);
+}
+
+.md {
+  font-size: 19px;
+}
+.md .icon {
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius-md);
+  font-size: 15px;
+}
+
+.sm {
+  font-size: var(--text-base);
+}
+.sm .icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  font-size: var(--text-sm);
+}
+
+.light {
+  color: var(--on-primary);
+  font-size: 17px;
+}
+.light:hover {
+  color: var(--on-primary);
+}
+.light .icon {
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
+  font-size: var(--text-xs);
+}

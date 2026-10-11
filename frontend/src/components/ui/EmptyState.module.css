@@ -1,0 +1,24 @@
+/* legacy .empty */
+.empty {
+  padding: var(--space-12) var(--space-5);
+  text-align: center;
+}
+
+.icon {
+  margin-bottom: var(--space-3);
+  color: var(--text-faint);
+  font-size: 36px;
+}
+
+.title {
+  margin-bottom: 7px;
+  font-size: var(--text-lg);
+}
+
+.description {
+  color: var(--text-muted);
+}
+
+.action {
+  margin-top: var(--space-4);
+}

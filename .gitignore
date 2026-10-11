@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Виртуальное окружение (лежит в корне проекта)
+networkit/
+
+# Секреты и локальные настройки
+.env
+.env.*
+!.env.example
+
+# Загруженные пользователями файлы и сборка
+media/
+staticfiles/
+dist/
+
+# Node
+node_modules/
+
+# Редакторы и ОС
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

@@ -1,0 +1,74 @@
+/* Модалка из legacy: .modal-overlay, .modal-box. На телефоне — панель снизу, от 600px — по центру. */
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-modal);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: var(--overlay);
+}
+
+.box {
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: var(--space-6);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-2xl) var(--radius-2xl) 0 0;
+  background: var(--surface);
+  box-shadow: var(--shadow-4);
+  animation: fadeUp 0.25s ease;
+  outline: none;
+}
+
+.title {
+  margin-bottom: 6px;
+  font-size: var(--text-lg);
+}
+
+.description {
+  margin-bottom: var(--space-4);
+  font-size: var(--text-md);
+  color: var(--text-muted);
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+}
+.actions > * {
+  width: 100%;
+}
+
+@media (min-width: 600px) {
+  .overlay {
+    align-items: center;
+    padding: var(--space-5);
+  }
+  .box {
+    max-width: 420px;
+    padding: calc(var(--space-6) + var(--space-1));
+    border-radius: var(--radius-2xl);
+  }
+  .actions {
+    flex-direction: row;
+    justify-content: flex-end;
+  }
+  .actions > * {
+    width: auto;
+  }
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}

@@ -4,7 +4,21 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>frontend</title>
+    <title>NetworkIt — Find the Right People to Build With</title>
+    <!-- Ставим data-theme до первой отрисовки, чтобы тема не мигала.
+         Ключ и значения должны совпадать с lib/storage.js и ThemeProvider. -->
+    <script>
+      (function () {
+        var mode = 'system';
+        try {
+          mode = localStorage.getItem('nk_theme') || 'system';
+        } catch (e) {}
+        var dark =
+          mode === 'dark' ||
+          (mode !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

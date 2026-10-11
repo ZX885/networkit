@@ -1,0 +1,20 @@
+/* legacy .amsg */
+.alert {
+  margin-bottom: 14px;
+  padding: 10px 14px;
+  border: 1px solid;
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+}
+
+.error {
+  border-color: var(--danger-border);
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+
+.success {
+  border-color: var(--success-border);
+  background: var(--success-soft);
+  color: var(--success);
+}

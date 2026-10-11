@@ -1,0 +1,43 @@
+/* legacy .pgn / .pg */
+.nav {
+  display: flex;
+  justify-content: center;
+  gap: 5px;
+  margin-top: var(--space-6);
+}
+
+.page {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--control-sm);
+  height: var(--control-sm);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--text-muted);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  box-shadow: var(--shadow-1);
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--ease);
+}
+
+.page:hover:not(:disabled),
+.current {
+  border-color: var(--primary);
+  background: var(--primary);
+  color: var(--on-primary);
+}
+
+.page:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.gap {
+  display: inline-flex;
+  align-items: center;
+  height: var(--control-sm);
+  color: var(--text-faint);
+}

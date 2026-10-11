@@ -1,0 +1,82 @@
+/* Чипы из legacy: .chipg / .chip (сетка) и .rg / .rb (пилюли) */
+.chip {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+  gap: 6px;
+  margin-top: var(--space-1);
+}
+
+.pill {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+@media (min-width: 600px) {
+  .chip {
+    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+    gap: 7px;
+  }
+}
+
+.item {
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+  color: var(--text-muted);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  cursor: pointer;
+  user-select: none;
+  transition: all var(--duration-fast) var(--ease);
+}
+
+.chipItem {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 36px;
+  padding: var(--space-2);
+  border-radius: var(--radius-md);
+  text-align: center;
+}
+
+/* Цели (legacy .gchip): колонка, иконка слева */
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.listItem {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 11px 14px;
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  text-align: left;
+}
+
+.item:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pillItem {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-full);
+}
+
+.item:hover:not(:disabled),
+.selected {
+  border-color: var(--primary);
+  background: var(--primary-soft);
+  color: var(--primary);
+}
+
+.selected {
+  font-weight: var(--weight-semibold);
+}

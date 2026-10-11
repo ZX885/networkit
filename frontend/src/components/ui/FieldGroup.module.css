@@ -1,0 +1,31 @@
+.group {
+  min-width: 0;
+  margin-bottom: var(--space-4);
+  border: none;
+}
+
+.legend {
+  display: block;
+  margin-bottom: 6px;
+  padding: 0;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  color: var(--text-secondary);
+}
+
+.optional {
+  font-weight: var(--weight-regular);
+  color: var(--text-muted);
+}
+
+.hint {
+  margin-top: 5px;
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+
+.error {
+  margin-top: 5px;
+  font-size: var(--text-xs);
+  color: var(--danger);
+}
