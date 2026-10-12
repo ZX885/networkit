@@ -1,0 +1,10 @@
+.wrap {
+  margin-bottom: var(--space-3);
+}
+
+.note {
+  margin-top: var(--space-2);
+  font-size: var(--text-sm);
+  text-align: center;
+  color: var(--text-muted);
+}

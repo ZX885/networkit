@@ -1,0 +1,27 @@
+/* legacy .s-cont / .s-title / .s-sub */
+.panel {
+  min-width: 0;
+  padding: 26px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  background: var(--surface);
+  box-shadow: var(--shadow-1);
+}
+
+.title {
+  margin-bottom: var(--space-1);
+  font-size: var(--text-lg);
+  font-weight: var(--weight-extrabold);
+}
+
+.subtitle {
+  margin-bottom: 22px;
+  font-size: var(--text-md);
+  color: var(--text-muted);
+}
+
+@media (max-width: 640px) {
+  .panel {
+    padding: var(--space-5) 14px;
+  }
+}

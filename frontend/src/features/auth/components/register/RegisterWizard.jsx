@@ -51,7 +51,7 @@ export default function RegisterWizard({ form }) {
             {content.title}
           </h2>
           <p className={styles.subtitle}>{content.subtitle}</p>
-          {submitError && <Alert>{submitError}</Alert>}
+          {isLast && submitError && <Alert>{submitError}</Alert>}
           <StepComponent form={form} errors={errors} />
           <div className={styles.nav}>
             {step > 1 ? (

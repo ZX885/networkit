@@ -1,0 +1,26 @@
+/* legacy .pbody: основная колонка + боковая 255px */
+.body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 255px;
+  gap: var(--space-4);
+}
+
+.column {
+  min-width: 0;
+}
+
+.bio {
+  font-size: var(--text-md);
+  line-height: 1.75;
+  color: var(--text-secondary);
+}
+
+.empty {
+  color: var(--text-muted);
+}
+
+@media (max-width: 780px) {
+  .body {
+    grid-template-columns: 1fr;
+  }
+}

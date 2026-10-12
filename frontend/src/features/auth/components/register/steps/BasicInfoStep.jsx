@@ -5,9 +5,9 @@ import { GENDERS } from '../../../../../constants/options.js';
 import { texts } from '../../../../../texts/en.js';
 import BirthDateFields from '../BirthDateFields.jsx';
 import styles from './Steps.module.css';
+import { errorText } from '../../../../../lib/apiErrors.js';
 
 const f = texts.register.fields;
-const v = texts.validation;
 
 // Шаг 1: имя, username (с проверкой занятости), email, пароль, дата рождения, пол.
 export default function BasicInfoStep({ form }) {
@@ -15,9 +15,13 @@ export default function BasicInfoStep({ form }) {
   const text = (name) => (e) => update(name, e.target.value);
 
   // Подсказка под username меняется по ходу проверки; «занято» показываем сразу, не ждём Continue
-  const usernameHints = { checking: f.usernameChecking, available: f.usernameAvailable };
-  const usernameError =
-    v[errors.username] || (usernameStatus === 'taken' ? v.usernameTaken : undefined);
+  const usernameHints = {
+    checking: f.usernameChecking,
+    available: f.usernameAvailable,
+    unknown: f.usernameUnknown,
+  };
+  const liveErrors = { taken: 'usernameTaken', reserved: 'usernameReserved' };
+  const usernameError = errorText(errors.username) || errorText(liveErrors[usernameStatus]);
 
   return (
     <>
@@ -29,7 +33,7 @@ export default function BasicInfoStep({ form }) {
           autoComplete="given-name"
           value={data.firstName}
           onChange={text('firstName')}
-          error={v[errors.firstName]}
+          error={errorText(errors.firstName)}
         />
         <Field
           label={f.lastName}
@@ -38,7 +42,7 @@ export default function BasicInfoStep({ form }) {
           autoComplete="family-name"
           value={data.lastName}
           onChange={text('lastName')}
-          error={v[errors.lastName]}
+          error={errorText(errors.lastName)}
         />
       </div>
       <Field
@@ -61,7 +65,7 @@ export default function BasicInfoStep({ form }) {
         autoComplete="email"
         value={data.email}
         onChange={text('email')}
-        error={v[errors.email]}
+        error={errorText(errors.email)}
       />
       <Field
         label={f.password}
@@ -71,9 +75,9 @@ export default function BasicInfoStep({ form }) {
         autoComplete="new-password"
         value={data.password}
         onChange={text('password')}
-        error={v[errors.password]}
+        error={errorText(errors.password)}
       />
-      <BirthDateFields data={data} update={update} error={v[errors.birthDate]} />
+      <BirthDateFields data={data} update={update} error={errorText(errors.birthDate)} />
       <FieldGroup legend={f.gender} optionalText={texts.common.optional}>
         <ChipSelect
           variant="pill"

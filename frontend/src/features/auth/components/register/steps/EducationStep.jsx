@@ -1,21 +1,21 @@
 import ChipSelect from '../../../../../components/ui/ChipSelect.jsx';
 import Field from '../../../../../components/ui/Field.jsx';
 import FieldGroup from '../../../../../components/ui/FieldGroup.jsx';
-import { FIELD_OTHER_CODE, FIELDS } from '../../../../../constants/fields.js';
+import { FIELDS } from '../../../../../constants/fields.js';
 import { STATUSES } from '../../../../../constants/options.js';
 import { texts } from '../../../../../texts/en.js';
+import { errorText } from '../../../../../lib/apiErrors.js';
 
 const f = texts.register.fields;
-const v = texts.validation;
 
-// Шаг 3: статус, школа, вуз, направление (список + «Other»), курс/уровень.
+// Шаг 3: статус, школа, вуз, направление (список, в конце «Other»), курс/уровень.
 export default function EducationStep({ form }) {
   const { data, errors, update } = form;
   const text = (name) => (e) => update(name, e.target.value);
 
   return (
     <>
-      <FieldGroup legend={f.status} required error={v[errors.status]}>
+      <FieldGroup legend={f.status} required error={errorText(errors.status)}>
         <ChipSelect
           variant="pill"
           multiple={false}
@@ -29,7 +29,7 @@ export default function EducationStep({ form }) {
         optionalText={texts.common.optional}
         value={data.school}
         onChange={text('school')}
-        error={v[errors.school]}
+        error={errorText(errors.school)}
       />
       <Field
         label={f.university}
@@ -37,7 +37,7 @@ export default function EducationStep({ form }) {
         placeholder={f.universityPlaceholder}
         value={data.university}
         onChange={text('university')}
-        error={v[errors.university]}
+        error={errorText(errors.university)}
       />
       <Field
         label={f.field}
@@ -45,7 +45,7 @@ export default function EducationStep({ form }) {
         required
         value={data.field}
         onChange={text('field')}
-        error={v[errors.field]}
+        error={errorText(errors.field)}
       >
         <option value="">{f.fieldPlaceholder}</option>
         {FIELDS.map((field) => (
@@ -54,22 +54,12 @@ export default function EducationStep({ form }) {
           </option>
         ))}
       </Field>
-      {data.field === FIELD_OTHER_CODE && (
-        <Field
-          label={f.fieldOther}
-          required
-          placeholder={f.fieldOtherPlaceholder}
-          value={data.fieldOther}
-          onChange={text('fieldOther')}
-          error={v[errors.fieldOther]}
-        />
-      )}
       <Field
         label={f.yearLevel}
         placeholder={f.yearLevelPlaceholder}
         value={data.yearLevel}
         onChange={text('yearLevel')}
-        error={v[errors.yearLevel]}
+        error={errorText(errors.yearLevel)}
       />
     </>
   );

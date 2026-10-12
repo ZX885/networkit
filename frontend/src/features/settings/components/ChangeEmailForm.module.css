@@ -1,0 +1,14 @@
+.title {
+  margin-bottom: var(--space-1);
+  font-size: var(--text-base);
+}
+
+.current {
+  margin-bottom: var(--space-4);
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+
+.current strong {
+  color: var(--text);
+}

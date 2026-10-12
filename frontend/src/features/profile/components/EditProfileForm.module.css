@@ -1,0 +1,51 @@
+.form {
+  max-width: 600px;
+}
+
+.photo {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+/* legacy .frow: два поля в ряд */
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  column-gap: var(--space-3);
+}
+
+.note {
+  margin-bottom: var(--space-3);
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.cancel {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--control-md);
+  padding: 0 var(--space-5);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--text-secondary);
+  font-weight: var(--weight-semibold);
+}
+
+.cancel:hover {
+  border-color: var(--border-strong);
+  color: var(--text);
+}
+
+@media (max-width: 480px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}

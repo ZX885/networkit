@@ -11,7 +11,6 @@ export const CITY_MAX = 100;
 export const REGION_MAX = 100;
 export const SCHOOL_MAX = 100;
 export const UNIVERSITY_MAX = 120;
-export const FIELD_OTHER_MAX = 60;
 export const YEAR_LEVEL_MAX = 40;
 export const EMAIL_MAX = 254;
 

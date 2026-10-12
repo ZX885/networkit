@@ -3,6 +3,7 @@ import FieldGroup from '../../../../../components/ui/FieldGroup.jsx';
 import { LANGUAGES } from '../../../../../constants/languages.js';
 import { LANGUAGES_MAX } from '../../../../../constants/rules.js';
 import { texts } from '../../../../../texts/en.js';
+import { errorText } from '../../../../../lib/apiErrors.js';
 
 const f = texts.register.fields;
 
@@ -15,7 +16,7 @@ export default function LanguagesStep({ form }) {
       legend={f.languages}
       legendHidden
       hint={`${data.languages.length}/${LANGUAGES_MAX}`}
-      error={texts.validation[errors.languages]}
+      error={errorText(errors.languages)}
     >
       <ChipSelect
         options={LANGUAGES}

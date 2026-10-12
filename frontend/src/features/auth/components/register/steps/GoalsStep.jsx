@@ -3,6 +3,7 @@ import FieldGroup from '../../../../../components/ui/FieldGroup.jsx';
 import { GOALS } from '../../../../../constants/goals.js';
 import { GOALS_MAX } from '../../../../../constants/rules.js';
 import { texts } from '../../../../../texts/en.js';
+import { errorText } from '../../../../../lib/apiErrors.js';
 
 const f = texts.register.fields;
 
@@ -15,7 +16,7 @@ export default function GoalsStep({ form }) {
       legend={f.goals}
       legendHidden
       hint={`${data.goals.length}/${GOALS_MAX}`}
-      error={texts.validation[errors.goals]}
+      error={errorText(errors.goals)}
     >
       <ChipSelect
         variant="list"

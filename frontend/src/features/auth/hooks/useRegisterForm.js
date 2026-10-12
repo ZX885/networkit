@@ -1,8 +1,9 @@
 import { useCallback, useState } from 'react';
-import { register } from '../../../api/mock/auth.js';
+import { register } from '../../../api/auth.js';
 import { ADULT_AGE } from '../../../constants/rules.js';
-import { texts } from '../../../texts/en.js';
+import { apiErrorText, fieldErrorText } from '../../../lib/apiErrors.js';
 import { buildRegisterPayload } from '../buildPayload.js';
+import { mapServerErrors } from '../serverErrors.js';
 import { findInvalidStep, getAgeFromData, validateStep } from '../validation.js';
 import useUsernameCheck from './useUsernameCheck.js';
 
@@ -25,7 +26,6 @@ const INITIAL_DATA = {
   school: '',
   university: '',
   field: '',
-  fieldOther: '',
   yearLevel: '',
   interests: [],
   languages: [],
@@ -41,34 +41,40 @@ const INITIAL_DATA = {
 
 // Всё состояние мастера регистрации: текущий шаг, введённые данные (сохраняются при
 // переходах назад), ошибки, отправка. Шаги только читают и меняют данные через update().
+// Ошибки бывают клиентские (проверка шага) и серверные (ответ API): серверные остаются у поля,
+// пока человек его не изменит.
 export default function useRegisterForm() {
   const [step, setStep] = useState(1);
   const [data, setData] = useState(INITIAL_DATA);
-  const [errors, setErrors] = useState({});
-  const [focusSignal, setFocusSignal] = useState(0); // растёт при неудачной проверке → фокус на первое поле с ошибкой
+  const [clientErrors, setClientErrors] = useState({});
+  const [serverErrors, setServerErrors] = useState({});
+  const [focusSignal, setFocusSignal] = useState(0); // растёт при ошибке → фокус на первое поле с ошибкой
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const [registeredEmail, setRegisteredEmail] = useState('');
 
   const usernameStatus = useUsernameCheck(data.username);
   const isAdult = (getAgeFromData(data) ?? 0) >= ADULT_AGE;
+  const errors = { ...serverErrors, ...clientErrors };
 
-  // Меняет поле и убирает его ошибку (поля даты относятся к одной ошибке birthDate)
+  // Меняет поле и убирает его ошибки (поля даты относятся к одной ошибке birthDate)
   const update = useCallback((field, value) => {
     setData((current) => ({ ...current, [field]: value }));
     const errorKey = field.startsWith('birth') ? 'birthDate' : field;
-    setErrors((current) => {
+    const without = (current) => {
       if (!current[errorKey]) return current;
       const next = { ...current };
       delete next[errorKey];
       return next;
-    });
+    };
+    setClientErrors(without);
+    setServerErrors(without);
   }, []);
 
   // Проверяет шаг; при ошибках показывает их и возвращает false
   function checkStep(stepNumber) {
     const found = validateStep(stepNumber, data, usernameStatus);
-    setErrors(found);
+    setClientErrors(found);
     if (Object.keys(found).length === 0) return true;
     setFocusSignal((n) => n + 1);
     return false;
@@ -79,8 +85,26 @@ export default function useRegisterForm() {
   }
 
   function goBack() {
-    setErrors({});
+    setClientErrors({});
     setStep((s) => Math.max(s - 1, 1));
+  }
+
+  // Ответ сервера с ошибкой: полевые ошибки раскладываем по шагам и возвращаемся на самый ранний,
+  // остальное (общие ошибки, лимит, сеть) показываем сообщением на последнем шаге
+  function handleSubmitError(error) {
+    if (error.code === 'validation_error') {
+      const { fieldErrors, firstStep, unmapped } = mapServerErrors(error.fields);
+      const general = [...error.nonFieldErrors, ...unmapped];
+      setServerErrors(fieldErrors);
+      setClientErrors({});
+      setSubmitError(general.length > 0 ? fieldErrorText(general[0]) : '');
+      if (firstStep > 0) {
+        setStep(firstStep);
+        setFocusSignal((n) => n + 1);
+      }
+      return;
+    }
+    setSubmitError(apiErrorText(error));
   }
 
   async function submit() {
@@ -89,7 +113,8 @@ export default function useRegisterForm() {
     const invalidStep = findInvalidStep(data, usernameStatus);
     if (invalidStep) {
       setStep(invalidStep);
-      setErrors(validateStep(invalidStep, data, usernameStatus));
+      setClientErrors(validateStep(invalidStep, data, usernameStatus));
+      setFocusSignal((n) => n + 1);
       return;
     }
     setSubmitting(true);
@@ -97,8 +122,8 @@ export default function useRegisterForm() {
     try {
       const result = await register(buildRegisterPayload(data));
       setRegisteredEmail(result.email);
-    } catch {
-      setSubmitError(texts.register.submitFailed);
+    } catch (error) {
+      handleSubmitError(error);
     } finally {
       setSubmitting(false);
     }

@@ -1,0 +1,7 @@
+/* legacy .rcts */
+.list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  list-style: none;
+}

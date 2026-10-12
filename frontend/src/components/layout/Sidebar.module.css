@@ -1,0 +1,44 @@
+/* legacy .sidebar: фиксированная панель слева */
+.sidebar {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  z-index: var(--z-nav);
+  display: flex;
+  width: var(--sidebar-width);
+  flex-direction: column;
+  padding: var(--space-4) 0 0;
+  overflow-y: auto;
+  border-right: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.logo {
+  margin-bottom: 10px;
+  padding: 0 18px 18px;
+  border-bottom: 1px solid var(--border);
+}
+
+.nav {
+  flex: 1;
+  padding: var(--space-1) var(--space-2);
+}
+
+/* ≤900px: панель спрятана за левым краем. visibility убирает скрытые ссылки из Tab-порядка */
+@media (max-width: 900px) {
+  .sidebar {
+    visibility: hidden;
+    transform: translateX(-100%);
+    box-shadow: var(--shadow-4);
+    transition:
+      transform 0.3s var(--ease),
+      visibility 0s linear 0.3s;
+  }
+
+  .open {
+    visibility: visible;
+    transform: translateX(0);
+    transition-delay: 0s;
+  }
+}

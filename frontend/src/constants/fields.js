@@ -1,8 +1,6 @@
 import { toOptions } from '../lib/options.js';
 
-export const FIELD_OTHER_CODE = 'other';
-
-// Направления: FLDS из legacy (36) + «Other» в конце
+// Направления: FLDS из legacy (36) + «Other» в конце (отдельного поля для уточнения нет)
 // prettier-ignore
 export const FIELDS = [
   ...toOptions([
@@ -14,5 +12,5 @@ export const FIELDS = [
     'Neuroscience', 'Nursing', 'Philosophy', 'Physics', 'Political Science', 'Psychology',
     'Public Health', 'Sociology', 'Software Engineering',
   ]),
-  { code: FIELD_OTHER_CODE, label: 'Other' },
+  { code: 'other', label: 'Other' },
 ];

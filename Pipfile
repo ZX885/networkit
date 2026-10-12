@@ -8,6 +8,8 @@ django = "*"
 djangorestframework = "*"
 psycopg = {extras = ["binary"], version = "*"}
 django-environ = "*"
+gunicorn = "==26.2.0"
+whitenoise = "==6.12.0"
 
 [dev-packages]
 

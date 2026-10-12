@@ -1,0 +1,55 @@
+/* legacy .sbl */
+.item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  min-height: var(--control-md);
+  margin-bottom: 1px;
+  padding: 9px 11px;
+  border: none;
+  border-radius: var(--radius-md);
+  background: none;
+  color: var(--text-muted);
+  font-size: var(--text-md);
+  font-weight: var(--weight-medium);
+  text-align: left;
+  transition: all var(--duration-fast) var(--ease);
+}
+
+.item:hover {
+  background: var(--bg);
+  color: var(--text);
+}
+
+.active,
+.active:hover {
+  background: var(--primary-soft);
+  color: var(--primary);
+  font-weight: var(--weight-semibold);
+}
+
+.danger {
+  color: var(--danger);
+}
+
+.danger:hover {
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+
+.label {
+  flex: 1;
+  min-width: 0;
+}
+
+/* legacy: синий бейдж-таблетка справа */
+.badge {
+  margin-left: auto;
+  padding: 2px 7px;
+  border-radius: var(--radius-full);
+  background: var(--primary);
+  color: var(--on-primary);
+  font-size: 10px;
+  font-weight: var(--weight-bold);
+}

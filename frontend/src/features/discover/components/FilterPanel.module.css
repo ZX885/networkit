@@ -1,0 +1,47 @@
+/* legacy .fp */
+.panel {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 10px;
+  align-items: end;
+  margin-bottom: var(--space-5);
+  padding: var(--space-4) var(--space-5);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  background: var(--surface);
+  box-shadow: var(--shadow-1);
+}
+
+.field {
+  margin-bottom: 0;
+}
+
+.clear {
+  display: flex;
+  align-items: flex-end;
+}
+
+@media (max-width: 700px) {
+  .panel {
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-2);
+    padding: 14px;
+  }
+}
+
+/* ≤600px: панель свёрнута, раскрывается кнопкой «Filters» */
+@media (max-width: 600px) {
+  .panel {
+    display: none;
+  }
+
+  .open {
+    display: grid;
+  }
+}
+
+@media (max-width: 480px) {
+  .panel {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,0 +1,19 @@
+/* legacy: красная рамка вокруг блока удаления */
+.box {
+  padding: var(--space-5);
+  border: 1px solid var(--danger-border);
+  border-radius: var(--radius-xl);
+  background: var(--danger-soft);
+}
+
+.title {
+  margin-bottom: 7px;
+  font-size: var(--text-base);
+  color: var(--danger);
+}
+
+.text {
+  margin-bottom: var(--space-4);
+  font-size: var(--text-md);
+  color: var(--text-secondary);
+}

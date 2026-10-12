@@ -7,7 +7,8 @@ import styles from './MobileMenu.module.css';
 
 // Мобильное меню на весь экран (legacy #mobile-menu). Esc закрывает, фокус уходит на кнопку «закрыть».
 // В закрытом состоянии элемент inert — скрыт от клавиатуры и скринридера.
-export default function MobileMenu({ open, onClose, links }) {
+// status — состояние входа (loading / anonymous / authenticated / error), onLogout — выход.
+export default function MobileMenu({ open, onClose, links, status, onLogout }) {
   const closeRef = useRef(null);
   const navigate = useNavigate();
   const t = texts.nav;
@@ -51,10 +52,30 @@ export default function MobileMenu({ open, onClose, links }) {
           {link.label}
         </Link>
       ))}
-      <Link to="/login" className={styles.link} onClick={onClose}>
-        {t.logIn}
-      </Link>
-      <Button onClick={() => goTo('/register')}>{t.joinNow}</Button>
+      {status === 'authenticated' && (
+        <>
+          <Link to="/discover" className={styles.link} onClick={onClose}>
+            {t.openApp}
+          </Link>
+          <Button
+            variant="ghost"
+            onClick={() => {
+              onClose();
+              onLogout();
+            }}
+          >
+            {t.logOut}
+          </Button>
+        </>
+      )}
+      {(status === 'anonymous' || status === 'error') && (
+        <>
+          <Link to="/login" className={styles.link} onClick={onClose}>
+            {t.logIn}
+          </Link>
+          <Button onClick={() => goTo('/register')}>{t.joinNow}</Button>
+        </>
+      )}
     </div>
   );
 }

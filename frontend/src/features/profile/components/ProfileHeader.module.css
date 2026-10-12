@@ -1,0 +1,60 @@
+/* legacy .phc / .phi / .phin / .phm */
+.card {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-5);
+  margin-bottom: var(--space-5);
+  padding: var(--space-8);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-2xl);
+  background: linear-gradient(135deg, var(--primary-soft) 0%, var(--surface) 60%);
+  box-shadow: var(--shadow-1);
+}
+
+.info {
+  min-width: 0;
+  flex: 1;
+}
+
+.name {
+  margin-bottom: 3px;
+  font-size: var(--text-xl);
+  font-weight: var(--weight-extrabold);
+}
+
+.username {
+  margin-bottom: 10px;
+  font-size: var(--text-sm);
+  color: var(--text-faint);
+}
+
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-bottom: var(--space-3);
+  list-style: none;
+}
+
+.metaItem {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+
+@media (max-width: 580px) {
+  .card {
+    flex-direction: column;
+    gap: 14px;
+    padding: var(--space-5);
+  }
+}
+
+@media (max-width: 500px) {
+  .meta {
+    flex-direction: column;
+    gap: 6px;
+  }
+}

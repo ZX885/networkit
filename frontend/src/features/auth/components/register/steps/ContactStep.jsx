@@ -1,11 +1,12 @@
 import { Link } from 'react-router-dom';
+import Alert from '../../../../../components/ui/Alert.jsx';
 import Checkbox from '../../../../../components/ui/Checkbox.jsx';
 import Field from '../../../../../components/ui/Field.jsx';
 import { texts } from '../../../../../texts/en.js';
 import styles from './Steps.module.css';
+import { errorText } from '../../../../../lib/apiErrors.js';
 
 const f = texts.register.fields;
-const v = texts.validation;
 const terms = texts.register.terms;
 
 // Шаг 8: контакты (только с 18 лет, все необязательные) и согласие с условиями.
@@ -16,6 +17,8 @@ export default function ContactStep({ form }) {
 
   return (
     <>
+      {/* Ошибка сервера «контакты запрещены» (не должна возникать, если возраст посчитан одинаково) */}
+      {errors.contacts && <Alert>{errorText(errors.contacts)}</Alert>}
       {isAdult ? (
         <>
           <div className={styles.row}>
@@ -24,14 +27,14 @@ export default function ContactStep({ form }) {
               placeholder={f.telegramPlaceholder}
               value={data.telegram}
               onChange={text('telegram')}
-              error={v[errors.telegram]}
+              error={errorText(errors.telegram)}
             />
             <Field
               label={f.instagram}
               placeholder={f.instagramPlaceholder}
               value={data.instagram}
               onChange={text('instagram')}
-              error={v[errors.instagram]}
+              error={errorText(errors.instagram)}
             />
           </div>
           <div className={styles.row}>
@@ -41,14 +44,14 @@ export default function ContactStep({ form }) {
               placeholder={f.whatsappPlaceholder}
               value={data.whatsapp}
               onChange={text('whatsapp')}
-              error={v[errors.whatsapp]}
+              error={errorText(errors.whatsapp)}
             />
             <Field
               label={f.linkedin}
               placeholder={f.linkedinPlaceholder}
               value={data.linkedin}
               onChange={text('linkedin')}
-              error={v[errors.linkedin]}
+              error={errorText(errors.linkedin)}
             />
           </div>
           <Field
@@ -57,7 +60,7 @@ export default function ContactStep({ form }) {
             placeholder={f.publicEmailPlaceholder}
             value={data.publicEmail}
             onChange={text('publicEmail')}
-            error={v[errors.publicEmail]}
+            error={errorText(errors.publicEmail)}
           />
         </>
       ) : (
@@ -67,7 +70,7 @@ export default function ContactStep({ form }) {
       <Checkbox
         checked={data.acceptedTerms}
         onChange={(checked) => update('acceptedTerms', checked)}
-        error={v[errors.acceptedTerms]}
+        error={errorText(errors.acceptedTerms)}
       >
         {terms.before}
         <Link to="/terms" target="_blank" rel="noopener">

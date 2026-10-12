@@ -54,6 +54,53 @@ class VerifyEmailTests(APITestCase):
         self.assertEqual(error_of(self.verify(forged))["code"], "invalid_token")
         self.assertEqual(error_of(self.verify("garbage"))["code"], "invalid_token")
 
+    def test_broken_tokens_always_give_invalid_token(self):
+        half = self.token[: len(self.token) // 2]
+        broken = {
+            "truncated at '=' (cut email line)": half + "=",
+            "newline inside": self.token[:20] + "\n" + self.token[20:],
+            "space inside": self.token[:20] + " " + self.token[20:],
+            "leading space": " garbage",
+            "empty": "",
+            "only spaces": "   ",
+            "too long": "x" * 5000,
+            "not a string": 12345,
+            "null": None,
+        }
+        for name, value in broken.items():
+            with self.subTest(name):
+                response = self.verify(value)
+                self.assertEqual(response.status_code, 400)
+                self.assertEqual(error_of(response)["code"], "invalid_token")
+
+    def test_missing_token_and_non_object_body_give_invalid_token(self):
+        for body in ({}, [], "text", ["a"]):
+            with self.subTest(body=body):
+                response = self.client.post(VERIFY, body, format="json")
+                self.assertEqual(response.status_code, 400)
+                self.assertEqual(error_of(response)["code"], "invalid_token")
+
+    def register(self, n):
+        self.client.post(
+            "/api/auth/register/",
+            registration_payload(email=f"demo{n}@example.com", username=f"demouser{n}"),
+            format="json",
+        )
+
+    def test_demo_link_is_logged_on_one_line_in_debug_and_with_demo_flag(self):
+        for n, flags in enumerate([{"DEBUG": True}, {"DEBUG": False, "DEMO_LOG_VERIFY_LINKS": True}]):
+            with self.subTest(flags), self.settings(**flags):
+                with self.assertLogs("apps.users.services", "INFO") as logs:
+                    self.register(n)
+                line = next(m for m in logs.output if "DEMO link:" in m)
+                self.assertIn("/verify-email/" + token_from_last_email(), line)
+                self.assertNotIn("\n", line)
+
+    def test_demo_link_is_not_logged_by_default(self):
+        with self.settings(DEBUG=False, DEMO_LOG_VERIFY_LINKS=False):
+            with self.assertNoLogs("apps.users.services", "INFO"):
+                self.register(9)
+
     def test_token_with_another_salt_is_rejected(self):
         other = signing.dumps({"uid": self.user.pk, "email": self.user.email}, salt="something.else")
 
