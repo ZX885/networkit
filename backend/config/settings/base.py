@@ -4,6 +4,7 @@
 Режимы: dev.py (разработка) и prod.py (боевой сервер) импортируют всё отсюда.
 """
 
+import sys
 from pathlib import Path
 
 import environ
@@ -30,10 +31,28 @@ def require(name, getter=env.str):
         ) from None
 
 
+# Идёт ли сейчас `manage.py test` (тогда кэш — в памяти, лимиты запросов выключены)
+TESTING = len(sys.argv) > 1 and sys.argv[1] == "test"
+
 SECRET_KEY = require("SECRET_KEY")
 
 # Адрес сайта (фронтенда): понадобится для ссылок в письмах
 SITE_URL = env.str("SITE_URL", default="http://localhost:5173")
+
+# Сессия: cookie недоступна JS, живёт 14 дней и не продлевается (срок считается от входа)
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = "Lax"
+SESSION_COOKIE_AGE = 60 * 60 * 24 * 14
+SESSION_SAVE_EVERY_REQUEST = False
+
+# CSRF: cookie читает JS (и отправляет в заголовке X-CSRFToken). Origin из списка считается своим:
+# в dev запросы приходят через Vite-прокси с Origin http://localhost:5173
+CSRF_COOKIE_HTTPONLY = False
+CSRF_COOKIE_SAMESITE = "Lax"
+CSRF_TRUSTED_ORIGINS = env.list("CSRF_TRUSTED_ORIGINS", default=[SITE_URL])
+
+# Письма: отправитель (backend почты задаётся в dev.py / prod.py)
+DEFAULT_FROM_EMAIL = env.str("DEFAULT_FROM_EMAIL", default="NetworkIt <noreply@localhost>")
 
 # База данных — только PostgreSQL, строка вида postgres://пользователь:пароль@127.0.0.1:5432/имя_базы
 DATABASES = {"default": env.db_url_config(require("DATABASE_URL"))}
@@ -96,10 +115,17 @@ ASGI_APPLICATION = "config.asgi.application"
 
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
-    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
+    {
+        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
+        "OPTIONS": {"min_length": 8},
+    },
     {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
+
+# В тестах используем быстрый (небезопасный) хэш: настоящий PBKDF2 делает тесты в разы медленнее
+if TESTING:
+    PASSWORD_HASHERS = ["django.contrib.auth.hashers.MD5PasswordHasher"]
 
 LANGUAGE_CODE = "en-us"
 TIME_ZONE = "UTC"
@@ -109,10 +135,45 @@ USE_TZ = True
 STATIC_URL = "static/"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-# Django REST Framework: сессии Django + CSRF, по умолчанию нужен вход.
+# Кэш нужен для счётчиков лимитов запросов. На сервере — таблица в БД (общая для всех процессов
+# Gunicorn); создаётся командой `python manage.py createcachetable`. В тестах — память процесса.
+if TESTING:
+    CACHES = {"default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"}}
+else:
+    CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.db.DatabaseCache",
+            "LOCATION": "django_cache",
+        }
+    }
+
+# Лимиты запросов (в минуту / в час). Подробности: docs/SPEC.md §3.0
+THROTTLE_RATES = {
+    "anon": "60/min",  # все анонимные запросы с одного IP
+    "user": "300/min",  # все запросы вошедшего пользователя
+    "login": "5/min",  # попытки входа с одного IP
+    "login_hour": "30/hour",
+    "register": "5/hour",  # регистрация и повторная отправка письма
+    "username_check": "30/min",
+}
+# Выключатель лимитов (в тестах выключены, отдельные тесты включают)
+THROTTLING_ENABLED = env.bool("THROTTLING_ENABLED", default=not TESTING)
+
+# Сколько прокси стоит перед Django (0 — клиент подключается напрямую). От этого зависит, какой
+# IP считается адресом клиента: при неверном значении лимиты можно обойти заголовком X-Forwarded-For.
+NUM_PROXIES = env.int("NUM_PROXIES", default=0)
+
+# Django REST Framework: сессии Django + CSRF, по умолчанию нужен вход и аккаунт не забанен.
 # Публичные view помечаются явно (permission_classes = [AllowAny]).
 REST_FRAMEWORK = {
-    "DEFAULT_AUTHENTICATION_CLASSES": ["rest_framework.authentication.SessionAuthentication"],
-    "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
+    "DEFAULT_AUTHENTICATION_CLASSES": ["config.authentication.SessionAuth"],
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework.permissions.IsAuthenticated",
+        "config.permissions.IsNotBanned",
+    ],
     "DEFAULT_PAGINATION_CLASS": "config.pagination.StandardPagination",
+    "DEFAULT_THROTTLE_CLASSES": ["config.throttles.AnonThrottle", "config.throttles.UserThrottle"],
+    "DEFAULT_THROTTLE_RATES": THROTTLE_RATES,
+    "EXCEPTION_HANDLER": "config.exceptions.exception_handler",
+    "NUM_PROXIES": NUM_PROXIES,
 }

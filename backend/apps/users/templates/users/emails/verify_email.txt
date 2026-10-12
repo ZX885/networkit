@@ -1,0 +1,10 @@
+{% autoescape off %}Hi {{ first_name }},
+
+Welcome to NetworkIt! Please confirm your email address to activate your account:
+
+{{ link }}
+
+The link works for 3 days. If you did not sign up, just ignore this email.
+
+— The NetworkIt team
+{% endautoescape %}
