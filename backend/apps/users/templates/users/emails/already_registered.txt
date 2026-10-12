@@ -1,0 +1,10 @@
+{% autoescape off %}Hi,
+
+Someone tried to create a NetworkIt account with this email address, but you already have one.
+
+You can log in here: {{ login_link }}
+
+If this was not you, you can ignore this email: nothing has changed.
+
+— The NetworkIt team
+{% endautoescape %}

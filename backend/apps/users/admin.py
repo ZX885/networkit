@@ -4,6 +4,7 @@ from django.utils import timezone
 
 from .forms import UserChangeForm, UserCreationForm
 from .models import User
+from .services import delete_user_sessions
 
 
 @admin.register(User)
@@ -32,8 +33,12 @@ class UserAdmin(DjangoUserAdmin):
 
     @admin.action(description="Ban selected users")
     def ban_users(self, request, queryset):
+        user_ids = list(queryset.values_list("pk", flat=True))
         count = queryset.filter(is_banned=False).update(is_banned=True, banned_at=timezone.now())
-        self.message_user(request, f"Banned users: {count}", messages.SUCCESS)
+        sessions = delete_user_sessions(user_ids)  # забаненный сразу теряет вход
+        self.message_user(
+            request, f"Banned users: {count}. Sessions ended: {sessions}", messages.SUCCESS
+        )
 
     @admin.action(description="Unban selected users")
     def unban_users(self, request, queryset):
