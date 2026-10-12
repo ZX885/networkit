@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Globe } from 'lucide-react';
-import Logo from '../shared/Logo.jsx';
+import Logo from '../ui/Logo.jsx';
 import { texts } from '../../texts/en.js';
 import styles from './Footer.module.css';
 
@@ -17,7 +17,7 @@ export default function Footer() {
         <div className={styles.top}>
           <div>
             <div className={styles.logo}>
-              <Logo to={null} tone="light" />
+              <Logo to={null} size="sm" tone="light" />
             </div>
             <p className={styles.description}>{t.description}</p>
           </div>

@@ -24,3 +24,10 @@ node_modules/
 .idea/
 .DS_Store
 Thumbs.db
+
+# Только для чтения / личное: в репозиторий не попадает
+/networkit-backend/
+/Django.md
+/DRF.md
+/DRF_React.md
+/React.md

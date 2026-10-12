@@ -1,4 +1,4 @@
-import Logo from '../components/shared/Logo.jsx';
+import Logo from '../components/ui/Logo.jsx';
 import CheckEmail from '../features/auth/components/register/CheckEmail.jsx';
 import RegisterWizard from '../features/auth/components/register/RegisterWizard.jsx';
 import useRegisterForm from '../features/auth/hooks/useRegisterForm.js';

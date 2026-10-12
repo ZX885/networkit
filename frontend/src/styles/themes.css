@@ -26,6 +26,7 @@
   --section-alt-bg: #0d0d0d;
   --feature-card-bg: #1a1d27;
   --footer-bg: #050505;
+  --logo-filter: invert(1);
 
   --success-soft: #052e16;
   --danger-soft: #450a0a;

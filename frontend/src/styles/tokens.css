@@ -61,6 +61,9 @@
   --footer-faint: #6b7280;
   --footer-border: #374151;
 
+  /* ── Логотип: знак чёрный, в тёмной теме переворачивается (themes.css) ── */
+  --logo-filter: none;
+
   /* ── Градиенты аватаров (legacy AVC в app.js), выбираются по id пользователя ── */
   --avatar-1: linear-gradient(135deg, #5b5fef, #8b8fff);
   --avatar-2: linear-gradient(135deg, #7c3aed, #a78bfa);

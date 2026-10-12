@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import Avatar from '../../components/ui/Avatar.jsx';
+import Logo from '../../components/ui/Logo.jsx';
 import Pagination from '../../components/ui/Pagination.jsx';
 import Tag from '../../components/ui/Tag.jsx';
 import Section from './Section.jsx';
@@ -18,7 +19,26 @@ export default function DataSection() {
   const [page, setPage] = useState(5);
 
   return (
-    <Section title="Avatar, Tag, Pagination">
+    <Section title="Logo, Avatar, Tag, Pagination">
+      <p className={layout.caption}>Logo — sizes sm / md / lg</p>
+      <div className={layout.row}>
+        <Logo to={null} size="sm" />
+        <Logo to={null} size="md" />
+        <Logo to={null} size="lg" />
+      </div>
+      <p className={layout.caption}>Logo — tone light (on dark background, as in the footer)</p>
+      <div
+        className={layout.row}
+        style={{
+          background: 'var(--footer-bg)',
+          padding: 'var(--space-4)',
+          borderRadius: 'var(--radius-md)',
+        }}
+      >
+        <Logo to={null} size="sm" tone="light" />
+        <Logo to={null} size="lg" tone="light" />
+      </div>
+
       <p className={layout.caption}>Avatar — sizes</p>
       <div className={layout.row}>
         {['sm', 'md', 'lg', 'xl'].map((size) => (

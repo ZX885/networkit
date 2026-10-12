@@ -2,7 +2,7 @@ import { useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Moon, Sun } from 'lucide-react';
 import useTheme from '../../app/providers/useTheme.js';
-import Logo from '../shared/Logo.jsx';
+import Logo from '../ui/Logo.jsx';
 import Button from '../ui/Button.jsx';
 import { texts } from '../../texts/en.js';
 import MobileMenu from './MobileMenu.jsx';

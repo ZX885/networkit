@@ -1,0 +1,54 @@
+/* legacy .nav-logo / .auth-logo / .footer-logo; знак — PNG вместо буквы «N» */
+.logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  font-family: var(--font-display);
+  font-weight: var(--weight-extrabold);
+  letter-spacing: -0.03em;
+  color: var(--primary);
+}
+.logo:hover {
+  color: var(--primary);
+}
+
+/* Знак чёрный: в тёмной теме --logo-filter переворачивает его в светлый (см. themes.css) */
+.mark {
+  display: block;
+  flex-shrink: 0;
+  filter: var(--logo-filter);
+}
+
+.sm {
+  font-size: var(--text-base);
+}
+.sm .mark {
+  width: 28px;
+  height: 28px;
+}
+
+.md {
+  font-size: 19px;
+}
+.md .mark {
+  width: 30px;
+  height: 30px;
+}
+
+.lg {
+  gap: var(--space-3);
+  font-size: 26px;
+}
+.lg .mark {
+  width: 40px;
+  height: 40px;
+}
+
+/* Тёмный фон (футер): текст белый, знак светлый в любой теме */
+.light,
+.light:hover {
+  color: var(--on-primary);
+}
+.light .mark {
+  filter: invert(1);
+}

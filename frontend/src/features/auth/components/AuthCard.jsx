@@ -1,4 +1,4 @@
-import Logo from '../../../components/shared/Logo.jsx';
+import Logo from '../../../components/ui/Logo.jsx';
 import styles from './AuthCard.module.css';
 
 // Центрированная карточка для входа и экрана «Check your email» (legacy .auth-wrap / .auth-card).
