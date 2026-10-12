@@ -31,7 +31,7 @@ from config.throttles import (
 )
 
 from . import services
-from .serializers import EmailSerializer, LoginSerializer, RegisterSerializer, TokenSerializer
+from .serializers import EmailSerializer, LoginSerializer, RegisterSerializer
 
 
 @api_view(["GET"])
@@ -76,9 +76,10 @@ class VerifyEmailView(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request):
-        serializer = TokenSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        services.verify_email(serializer.validated_data["token"])
+        # Любой странный ввод (пусто, не строка, не JSON-объект) — тот же invalid_token, а не 400 про поля
+        data = request.data if isinstance(request.data, dict) else {}
+        token = data.get("token")
+        services.verify_email(token.strip() if isinstance(token, str) else "")
         return Response({"status": "verified"})  # сессию не создаём: дальше человек входит сам
 
 

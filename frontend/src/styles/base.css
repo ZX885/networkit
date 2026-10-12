@@ -85,6 +85,12 @@ button {
   outline-offset: 2px;
 }
 
+/* Текст, который ввёл пользователь (bio, имена, теги): длинное слово переносится, а не вылезает */
+.user-text {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
 /* Скрыто визуально, но доступно скринридеру */
 .visually-hidden {
   position: absolute;

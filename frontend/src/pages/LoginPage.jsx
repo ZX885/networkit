@@ -6,14 +6,14 @@ import { texts } from '../texts/en.js';
 
 const t = texts.login;
 
-// Страница входа. После успешного входа (пока мок) — тост и переход на главную.
+// Страница входа. После успешного входа — тост и переход в приложение (Discover).
 export default function LoginPage() {
   const navigate = useNavigate();
   const showToast = useToast();
 
   function handleSuccess(user) {
-    showToast(t.welcome(user.firstName), 'success');
-    navigate('/');
+    showToast(t.welcome(user.first_name), 'success');
+    navigate('/discover');
   }
 
   return (

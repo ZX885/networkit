@@ -3,7 +3,6 @@ import {
   BIO_MAX,
   CITY_MAX,
   EMAIL_MAX,
-  FIELD_OTHER_MAX,
   GOALS_MAX,
   INTERESTS_MAX,
   LANGUAGES_MAX,
@@ -19,14 +18,13 @@ import {
   USERNAME_REGEX,
   YEAR_LEVEL_MAX,
 } from '../../constants/rules.js';
-import { FIELD_OTHER_CODE } from '../../constants/fields.js';
 import { getAge, isRealDate } from '../../lib/date.js';
 
 // Правила проверки полей регистрации (docs/SPEC.md §5). Функции возвращают объект
 // { поле: 'код ошибки' }; тексты по кодам лежат в texts.validation. Пустой объект — всё верно.
 
 const NAME_REGEX = /^\p{L}[\p{L}\p{M} '.-]*$/u; // буквы любого алфавита, пробел, дефис, апостроф, точка
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+export const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const TELEGRAM_REGEX = /^@?[A-Za-z0-9_]{5,32}$/;
 const INSTAGRAM_REGEX = /^@?[A-Za-z0-9._]{1,30}$/;
 const WHATSAPP_REGEX = /^\+[1-9]\d{6,14}$/;
@@ -78,6 +76,7 @@ function checkUsername(value, status) {
   if (!USERNAME_REGEX.test(username) || username.includes('__')) return 'usernameFormat';
   if (RESERVED_USERNAMES.includes(username)) return 'usernameReserved';
   if (status === 'taken') return 'usernameTaken';
+  if (status === 'reserved') return 'usernameReserved';
   if (status === 'checking') return 'usernameChecking';
   return null;
 }
@@ -127,8 +126,6 @@ const stepValidators = {
     school: checkMaxLength(d.school, SCHOOL_MAX),
     university: checkMaxLength(d.university, UNIVERSITY_MAX),
     field: checkRequired(d.field),
-    fieldOther:
-      d.field === FIELD_OTHER_CODE ? checkRequiredMax(d.fieldOther, FIELD_OTHER_MAX) : null,
     yearLevel: checkMaxLength(d.yearLevel, YEAR_LEVEL_MAX),
   }),
   4: (d) => ({ interests: checkCount(d.interests, INTERESTS_MAX, 'tooManyInterests') }),

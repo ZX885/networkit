@@ -1,0 +1,17 @@
+/* кнопка «Filters» нужна только на ≤600px, где панель свёрнута */
+.filtersToggle {
+  display: none;
+}
+
+@media (max-width: 600px) {
+  .filtersToggle {
+    display: inline-flex;
+  }
+}
+
+.info {
+  min-height: 1.6em;
+  margin-bottom: var(--space-3);
+  font-size: var(--text-sm);
+  color: var(--text-faint);
+}

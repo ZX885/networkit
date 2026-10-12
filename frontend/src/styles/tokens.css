@@ -127,6 +127,9 @@
   --control-lg: 48px;
   --control-field: 44px;
 
+  /* ── Оболочка приложения ── */
+  --sidebar-width: 230px; /* legacy .sidebar */
+
   /* ── Анимации (legacy --tr: .18s ease) ── */
   --duration-fast: 0.18s;
   --duration-base: 0.25s;

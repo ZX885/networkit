@@ -3,6 +3,7 @@ import FieldGroup from '../../../../../components/ui/FieldGroup.jsx';
 import { INTERESTS } from '../../../../../constants/interests.js';
 import { INTERESTS_MAX } from '../../../../../constants/rules.js';
 import { texts } from '../../../../../texts/en.js';
+import { errorText } from '../../../../../lib/apiErrors.js';
 
 const f = texts.register.fields;
 
@@ -15,7 +16,7 @@ export default function InterestsStep({ form }) {
       legend={f.interests}
       legendHidden
       hint={`${data.interests.length}/${INTERESTS_MAX}`}
-      error={texts.validation[errors.interests]}
+      error={errorText(errors.interests)}
     >
       <ChipSelect
         options={INTERESTS}

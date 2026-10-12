@@ -53,8 +53,16 @@ def _send_email(to_email, subject, template, context):
         logger.exception("Could not send email %r to user", subject)
 
 
+def log_demo_link(link):
+    """Ссылка из письма в лог одной строкой (в консольном письме длинные строки переносятся).
+    Только при DEBUG или DEMO_LOG_VERIFY_LINKS (демо без SMTP); на боевом сайте не включать."""
+    if settings.DEBUG or settings.DEMO_LOG_VERIFY_LINKS:
+        logger.info("DEMO link: %s", link)
+
+
 def send_verification_email(user):
     link = f"{_site_url()}/verify-email/{make_verification_token(user)}"
+    log_demo_link(link)
     first_name = getattr(getattr(user, "profile", None), "first_name", "") or "there"
     _send_email(
         user.email,

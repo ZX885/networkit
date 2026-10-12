@@ -1,0 +1,67 @@
+/* legacy .s-nav / .sni */
+.nav {
+  height: fit-content;
+  padding: var(--space-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  background: var(--surface);
+  box-shadow: var(--shadow-1);
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 38px;
+  margin-bottom: 2px;
+  padding: 9px 11px;
+  border-radius: var(--radius-md);
+  color: var(--text-muted);
+  font-size: var(--text-md);
+  font-weight: var(--weight-medium);
+  transition: all var(--duration-fast) var(--ease);
+}
+
+.item:hover {
+  background: var(--bg);
+  color: var(--text);
+}
+
+.active,
+.active:hover {
+  background: var(--primary-soft);
+  color: var(--primary);
+  font-weight: var(--weight-semibold);
+}
+
+/* «Danger» отделена линией сверху и красная */
+.danger {
+  margin-top: 7px;
+  color: var(--danger);
+}
+
+.danger:hover {
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+
+@media (max-width: 640px) {
+  .nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 3px;
+  }
+
+  .item {
+    flex: 1;
+    min-width: 90px;
+    justify-content: center;
+    margin: 0;
+    padding: var(--space-2) 9px;
+    font-size: var(--text-xs);
+  }
+
+  .danger {
+    margin-top: 0;
+  }
+}

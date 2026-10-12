@@ -1,6 +1,7 @@
 import Field from '../../../../../components/ui/Field.jsx';
 import { BIO_MAX } from '../../../../../constants/rules.js';
 import { texts } from '../../../../../texts/en.js';
+import { errorText } from '../../../../../lib/apiErrors.js';
 
 const f = texts.register.fields;
 
@@ -18,7 +19,7 @@ export default function AboutStep({ form }) {
       value={data.bio}
       onChange={(e) => update('bio', e.target.value)}
       hint={`${data.bio.length}/${BIO_MAX}`}
-      error={texts.validation[errors.bio]}
+      error={errorText(errors.bio)}
     />
   );
 }

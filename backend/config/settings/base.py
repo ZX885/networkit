@@ -4,6 +4,7 @@
 Режимы: dev.py (разработка) и prod.py (боевой сервер) импортируют всё отсюда.
 """
 
+import os
 import sys
 from pathlib import Path
 
@@ -15,7 +16,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 env = environ.Env()
 ENV_FILE = BASE_DIR / ".env"
-if ENV_FILE.exists():
+# SKIP_DOTENV=1 — не читать backend/.env (проверки боевых настроек: все значения только из окружения)
+if ENV_FILE.exists() and os.environ.get("SKIP_DOTENV") != "1":
     environ.Env.read_env(ENV_FILE)
 
 
@@ -37,7 +39,8 @@ TESTING = len(sys.argv) > 1 and sys.argv[1] == "test"
 SECRET_KEY = require("SECRET_KEY")
 
 # Адрес сайта (фронтенда): понадобится для ссылок в письмах
-SITE_URL = env.str("SITE_URL", default="http://localhost:5173")
+# Без завершающего слэша: из него строятся ссылки ({SITE_URL}/verify-email/…) и список доверенных origin
+SITE_URL = env.str("SITE_URL", default="http://localhost:5173").rstrip("/")
 
 # Сессия: cookie недоступна JS, живёт 14 дней и не продлевается (срок считается от входа)
 SESSION_COOKIE_HTTPONLY = True
@@ -49,7 +52,10 @@ SESSION_SAVE_EVERY_REQUEST = False
 # в dev запросы приходят через Vite-прокси с Origin http://localhost:5173
 CSRF_COOKIE_HTTPONLY = False
 CSRF_COOKIE_SAMESITE = "Lax"
-CSRF_TRUSTED_ORIGINS = env.list("CSRF_TRUSTED_ORIGINS", default=[SITE_URL])
+# По умолчанию — SITE_URL. Origin сравнивается строкой, поэтому слэш в конце убираем.
+CSRF_TRUSTED_ORIGINS = [
+    origin.strip().rstrip("/") for origin in env.list("CSRF_TRUSTED_ORIGINS", default=[SITE_URL])
+]
 
 # Письма: отправитель (backend почты задаётся в dev.py / prod.py)
 DEFAULT_FROM_EMAIL = env.str("DEFAULT_FROM_EMAIL", default="NetworkIt <noreply@localhost>")
@@ -133,6 +139,24 @@ USE_I18N = True
 USE_TZ = True
 
 STATIC_URL = "static/"
+STATIC_ROOT = BASE_DIR / "staticfiles"  # сюда collectstatic собирает файлы админки (папка в .gitignore)
+
+# Адрес админки (без слэша в начале, со слэшем в конце). На боевом сайте его можно сменить
+ADMIN_URL = env.str("ADMIN_URL", default="admin/").strip().lstrip("/")
+if not ADMIN_URL.endswith("/"):
+    ADMIN_URL += "/"
+
+# Демо без SMTP: ссылки подтверждения пишутся в лог одной строкой «DEMO link: …».
+# Только для демо с тестовыми данными: на боевом сайте включать нельзя (ссылка = вход в чужой аккаунт).
+DEMO_LOG_VERIFY_LINKS = env.bool("DEMO_LOG_VERIFY_LINKS", default=False)
+
+# Логи приложения users (DEMO link) идут в консоль: на Railway это stdout контейнера
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {"console": {"class": "logging.StreamHandler"}},
+    "loggers": {"apps.users": {"handlers": ["console"], "level": "INFO"}},
+}
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # Кэш нужен для счётчиков лимитов запросов. На сервере — таблица в БД (общая для всех процессов

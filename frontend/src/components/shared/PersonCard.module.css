@@ -1,0 +1,98 @@
+/* legacy .rc */
+.card {
+  padding: var(--space-5);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  background: var(--surface);
+  box-shadow: var(--shadow-1);
+  transition: all 0.2s var(--ease);
+}
+
+.card:hover {
+  border-color: var(--primary-soft-strong);
+  box-shadow: var(--shadow-3);
+  transform: translateY(-2px);
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  margin-bottom: 11px;
+}
+
+.who {
+  min-width: 0;
+}
+
+.name {
+  margin-bottom: 1px;
+  font-family: var(--font-body);
+  font-size: 15px;
+  letter-spacing: normal;
+}
+
+.field {
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  color: var(--primary);
+}
+
+.place {
+  margin-bottom: var(--space-2);
+  font-size: var(--text-xs);
+  color: var(--text-faint);
+}
+
+/* bio — не больше двух строк */
+.bio {
+  display: -webkit-box;
+  margin-bottom: 10px;
+  overflow: hidden;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--text-muted);
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-bottom: var(--space-3);
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.view {
+  flex: 1;
+}
+
+.bookmark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--control-sm);
+  height: var(--control-sm);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--text-muted);
+  transition: all var(--duration-fast) var(--ease);
+}
+
+.bookmark:hover:not(:disabled) {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.bookmarked {
+  border-color: var(--primary);
+  background: var(--primary-soft);
+  color: var(--primary);
+}

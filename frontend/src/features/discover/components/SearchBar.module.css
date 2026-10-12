@@ -1,0 +1,45 @@
+/* legacy .sbar */
+.bar {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: var(--space-2);
+  max-width: 320px;
+  padding: var(--space-2) var(--space-4);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-full);
+  background: var(--surface);
+  box-shadow: var(--shadow-1);
+  transition: border-color var(--duration-fast) var(--ease);
+}
+
+.bar:focus-within {
+  border-color: var(--primary);
+}
+
+.icon {
+  flex-shrink: 0;
+  color: var(--text-faint);
+}
+
+.input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: none;
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  outline: none;
+}
+
+.input::placeholder {
+  color: var(--text-faint);
+}
+
+@media (max-width: 700px) {
+  .bar {
+    width: 100%;
+    max-width: 100%;
+  }
+}

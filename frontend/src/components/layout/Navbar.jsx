@@ -1,6 +1,8 @@
 import { useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Moon, Sun } from 'lucide-react';
+import useAuth from '../../app/providers/useAuth.js';
+import useLogout from '../../app/providers/useLogout.js';
 import useTheme from '../../app/providers/useTheme.js';
 import Logo from '../ui/Logo.jsx';
 import Button from '../ui/Button.jsx';
@@ -17,12 +19,17 @@ const SECTION_LINKS = [
 ];
 
 // Верхняя панель публичных страниц (legacy #nav): логотип, ссылки, вход, тема, регистрация.
+// Для вошедшего вместо «Log in / Join now» — «My profile» и «Log out».
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuButtonRef = useRef(null);
   const navigate = useNavigate();
   const { resolved, setMode } = useTheme();
+  const { status } = useAuth();
+  const handleLogout = useLogout();
   const isDark = resolved === 'dark';
+  const isLoading = status === 'loading'; // пока проверяем сессию, кнопки входа не показываем
+  const isAuthenticated = status === 'authenticated';
 
   function closeMenu() {
     setMenuOpen(false);
@@ -41,14 +48,21 @@ export default function Navbar() {
           ))}
         </div>
         <div className={styles.actions}>
-          <Button
-            variant="ghost"
-            size="sm"
-            className={styles.desktopOnly}
-            onClick={() => navigate('/login')}
-          >
-            {t.logIn}
-          </Button>
+          {!isLoading && !isAuthenticated && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className={styles.desktopOnly}
+              onClick={() => navigate('/login')}
+            >
+              {t.logIn}
+            </Button>
+          )}
+          {isAuthenticated && (
+            <Button variant="ghost" size="sm" className={styles.desktopOnly} onClick={handleLogout}>
+              {t.logOut}
+            </Button>
+          )}
           <Button
             variant="ghost"
             size="sm"
@@ -58,9 +72,16 @@ export default function Navbar() {
           >
             {isDark ? <Sun size={16} aria-hidden="true" /> : <Moon size={16} aria-hidden="true" />}
           </Button>
-          <Button size="sm" onClick={() => navigate('/register')}>
-            {t.joinNow}
-          </Button>
+          {isAuthenticated && (
+            <Button size="sm" onClick={() => navigate('/discover')}>
+              {t.openApp}
+            </Button>
+          )}
+          {!isLoading && !isAuthenticated && (
+            <Button size="sm" onClick={() => navigate('/register')}>
+              {t.joinNow}
+            </Button>
+          )}
           <button
             ref={menuButtonRef}
             type="button"
@@ -75,7 +96,13 @@ export default function Navbar() {
           </button>
         </div>
       </nav>
-      <MobileMenu open={menuOpen} onClose={closeMenu} links={SECTION_LINKS} />
+      <MobileMenu
+        open={menuOpen}
+        onClose={closeMenu}
+        links={SECTION_LINKS}
+        status={status}
+        onLogout={handleLogout}
+      />
     </>
   );
 }

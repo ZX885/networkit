@@ -1,0 +1,7 @@
+/* legacy .dvd */
+.divider {
+  height: 1px;
+  margin: var(--space-5) 0;
+  border: none;
+  background: var(--border);
+}

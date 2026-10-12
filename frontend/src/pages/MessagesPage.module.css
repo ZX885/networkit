@@ -1,0 +1,46 @@
+/* legacy #messages-layout: список 268px + чат */
+.layout {
+  display: grid;
+  grid-template-columns: 268px minmax(0, 1fr);
+  height: calc(100vh - 140px);
+  min-height: 480px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-2xl);
+  background: var(--surface);
+  box-shadow: var(--shadow-1);
+}
+
+.list,
+.right {
+  display: flex;
+  min-height: 0;
+  min-width: 0;
+  flex-direction: column;
+}
+
+.list > *,
+.right > * {
+  flex: 1;
+}
+
+.empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-10);
+  text-align: center;
+}
+
+@media (max-width: 580px) {
+  .layout {
+    grid-template-columns: 1fr;
+    height: calc(100vh - 140px);
+  }
+
+  /* показываем либо список, либо чат */
+  .layout[data-chat='open'] .list,
+  .layout[data-chat='closed'] .right {
+    display: none;
+  }
+}

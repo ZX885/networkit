@@ -5,13 +5,13 @@ import { getAgeFromData, parseBirthDate } from './validation.js';
 const clean = (value) => value.trim();
 const withoutAt = (value) => clean(value).replace(/^@/, '');
 
-// Собирает тело запроса регистрации из данных формы (формат — docs/SPEC.md §3.2).
-// Контакты отправляются только совершеннолетним.
+// Собирает тело запроса POST /api/auth/register/ из данных формы (поля — как в backend).
+// Контакты отправляются только совершеннолетним; телефона и field_other нет.
 export function buildRegisterPayload(data) {
   const { year, month, day } = parseBirthDate(data);
   const isAdult = (getAgeFromData(data) ?? 0) >= ADULT_AGE;
 
-  return {
+  const payload = {
     email: clean(data.email).toLowerCase(),
     password: data.password,
     username: clean(data.username).toLowerCase(),
@@ -26,21 +26,22 @@ export function buildRegisterPayload(data) {
     school: clean(data.school),
     university: clean(data.university),
     field: data.field,
-    field_other: data.field === 'other' ? clean(data.fieldOther) : '',
     year_level: clean(data.yearLevel),
     bio: data.bio.trim(),
     interests: data.interests,
     languages: data.languages,
     goals: data.goals,
-    contacts: isAdult
-      ? {
-          telegram: withoutAt(data.telegram),
-          instagram: withoutAt(data.instagram),
-          whatsapp: data.whatsapp.replace(/[\s()-]/g, ''),
-          linkedin: clean(data.linkedin),
-          public_email: clean(data.publicEmail),
-        }
-      : null,
     accepted_terms: data.acceptedTerms,
   };
+  // Несовершеннолетним ключ contacts не отправляем (сервер отклонит null и любые контакты)
+  if (isAdult) {
+    payload.contacts = {
+      telegram: withoutAt(data.telegram),
+      instagram: withoutAt(data.instagram),
+      whatsapp: data.whatsapp.replace(/[\s()-]/g, ''),
+      linkedin: clean(data.linkedin),
+      public_email: clean(data.publicEmail),
+    };
+  }
+  return payload;
 }

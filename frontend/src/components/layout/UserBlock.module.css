@@ -1,0 +1,36 @@
+/* legacy .sb-user */
+.block {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-top: auto;
+  padding: var(--space-4);
+  border-top: 1px solid var(--border);
+  color: inherit;
+  transition: background var(--duration-fast) var(--ease);
+}
+
+.block:hover {
+  background: var(--bg);
+  color: inherit;
+}
+
+.text {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+}
+
+.name {
+  overflow: hidden;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  color: var(--text);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.role {
+  font-size: 11px;
+  color: var(--text-faint);
+}

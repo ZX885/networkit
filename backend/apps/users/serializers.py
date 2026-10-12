@@ -65,10 +65,6 @@ class LoginSerializer(serializers.Serializer):
         return value.strip().lower()
 
 
-class TokenSerializer(serializers.Serializer):
-    token = serializers.CharField(max_length=1000)
-
-
 class EmailSerializer(serializers.Serializer):
     email = serializers.EmailField(max_length=254)
 
