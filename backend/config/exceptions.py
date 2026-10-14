@@ -6,6 +6,7 @@
 `fields` и `non_field_errors` есть только у ошибок валидации (400 validation_error).
 """
 
+import logging
 from math import ceil
 
 from django.core.exceptions import PermissionDenied as DjangoPermissionDenied
@@ -14,6 +15,8 @@ from django.views import defaults
 from rest_framework import exceptions, status
 from rest_framework.response import Response
 from rest_framework.settings import api_settings
+
+logger = logging.getLogger(__name__)
 
 
 # ── Свои ошибки: у каждой свой код, который фронтенд превращает в текст ──
@@ -104,13 +107,24 @@ def error_body(code, message, **extra):
 
 
 def exception_handler(exc, context):
-    """Обработчик исключений DRF. Не-API исключения (баги) отдаём Django → handler500."""
+    """Обработчик исключений DRF. Неожиданные исключения (баги) пишем в лог с трейсбеком, а клиенту
+    отдаём нейтральный server_error без деталей."""
     if isinstance(exc, Http404):
         exc = exceptions.NotFound()
     elif isinstance(exc, DjangoPermissionDenied):
         exc = exceptions.PermissionDenied()
     if not isinstance(exc, exceptions.APIException):
-        return None
+        request = context.get("request")
+        logger.error(
+            "Unhandled exception in API view: %s %s",
+            getattr(request, "method", "?"),
+            getattr(request, "path", "?"),
+            exc_info=exc,
+        )
+        return Response(
+            error_body("server_error", "Something went wrong."),
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
 
     headers = {}
     if isinstance(exc, exceptions.ValidationError):

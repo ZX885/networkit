@@ -1,16 +1,16 @@
 import ChipSelect from '../../../../../components/ui/ChipSelect.jsx';
 import Field from '../../../../../components/ui/Field.jsx';
 import FieldGroup from '../../../../../components/ui/FieldGroup.jsx';
-import { FIELDS } from '../../../../../constants/fields.js';
-import { STATUSES } from '../../../../../constants/options.js';
+import useMeta from '../../../../../api/useMeta.js';
 import { texts } from '../../../../../texts/en.js';
 import { errorText } from '../../../../../lib/apiErrors.js';
 
 const f = texts.register.fields;
 
-// Шаг 3: статус, школа, вуз, направление (список, в конце «Other»), курс/уровень.
+// Шаг 3: статус, школа, вуз, направление (список с сервера, в конце «Other»), курс/уровень.
 export default function EducationStep({ form }) {
   const { data, errors, update } = form;
+  const { meta } = useMeta();
   const text = (name) => (e) => update(name, e.target.value);
 
   return (
@@ -19,7 +19,7 @@ export default function EducationStep({ form }) {
         <ChipSelect
           variant="pill"
           multiple={false}
-          options={STATUSES}
+          options={meta.statuses}
           value={data.status ? [data.status] : []}
           onChange={([value]) => update('status', value)}
         />
@@ -48,7 +48,7 @@ export default function EducationStep({ form }) {
         error={errorText(errors.field)}
       >
         <option value="">{f.fieldPlaceholder}</option>
-        {FIELDS.map((field) => (
+        {meta.fields.map((field) => (
           <option key={field.code} value={field.code}>
             {field.label}
           </option>

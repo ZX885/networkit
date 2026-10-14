@@ -57,9 +57,12 @@ export default function AuthProvider({ children }) {
     setState(GUEST);
   }, []);
 
+  // Обновляет данные вошедшего (например, после PATCH /api/me/) без экрана загрузки
+  const updateUser = useCallback((user) => setState({ status: 'authenticated', user }), []);
+
   const value = useMemo(
-    () => ({ ...state, login, logout, refresh }),
-    [state, login, logout, refresh],
+    () => ({ ...state, login, logout, refresh, updateUser }),
+    [state, login, logout, refresh, updateUser],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

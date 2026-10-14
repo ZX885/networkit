@@ -1,5 +1,6 @@
 import { Link2 } from 'lucide-react';
 import useAuth from '../app/providers/useAuth.js';
+import MetaGate from '../components/shared/MetaGate.jsx';
 import PageHeader from '../components/shared/PageHeader.jsx';
 import Button from '../components/ui/Button.jsx';
 import ButtonLink from '../components/ui/ButtonLink.jsx';
@@ -38,7 +39,9 @@ export default function MyProfilePage() {
           </ButtonLink>
         </div>
       </PageHeader>
-      <ProfileView profile={user} isOwner />
+      <MetaGate>
+        <ProfileView profile={user} isOwner />
+      </MetaGate>
     </>
   );
 }

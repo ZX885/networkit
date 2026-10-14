@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { SearchX, SlidersHorizontal } from 'lucide-react';
+import MetaGate from '../components/shared/MetaGate.jsx';
 import PageHeader from '../components/shared/PageHeader.jsx';
 import Button from '../components/ui/Button.jsx';
 import EmptyState from '../components/ui/EmptyState.jsx';
@@ -15,7 +16,8 @@ import styles from './DiscoverPage.module.css';
 const t = texts.discover;
 const FILTERS_ID = 'discover-filters';
 
-// Discover: поиск и фильтры (в адресе страницы), сетка людей, пагинация. Данные — MOCK (api/mock/people.js).
+// Discover: поиск и фильтры (в адресе страницы), сетка людей, пагинация. Данные — MOCK (api/mock/people.js);
+// списки для фильтров и названия на карточках — с сервера (MetaGate).
 export default function DiscoverPage() {
   const { params, update } = useDiscoverParams();
   const { loading, error, data, retry } = usePeople(params);
@@ -49,47 +51,49 @@ export default function DiscoverPage() {
         </Button>
         <SearchBar value={params.q} onSearch={(q) => update({ q }, { replace: true })} />
       </PageHeader>
-      <FilterPanel
-        id={FILTERS_ID}
-        open={filtersOpen}
-        params={params}
-        onChange={update}
-        onClear={clearAll}
-      />
-      {/* aria-live: скринридер зачитывает число найденных или «Loading» */}
-      <p className={styles.info} role="status" aria-live="polite">
-        {loading ? t.loadingList : data && t.found(data.count)}
-      </p>
-      {error ? (
-        <EmptyState
-          title={texts.app.errorTitle}
-          action={<Button onClick={retry}>{texts.app.retry}</Button>}
+      <MetaGate>
+        <FilterPanel
+          id={FILTERS_ID}
+          open={filtersOpen}
+          params={params}
+          onChange={update}
+          onClear={clearAll}
         />
-      ) : empty ? (
-        <EmptyState
-          icon={<SearchX size={36} />}
-          title={t.emptyTitle}
-          description={t.emptyText}
-          action={
-            <Button variant="ghost" onClick={clearAll}>
-              {t.clearAll}
-            </Button>
-          }
-        />
-      ) : (
-        <PeopleGrid people={data?.results ?? null} />
-      )}
-      {data && (
-        <Pagination
-          page={params.page}
-          pageCount={data.pageCount}
-          onChange={changePage}
-          label={t.pagination.label}
-          prevLabel={t.pagination.prev}
-          nextLabel={t.pagination.next}
-          pageLabel={t.pagination.page}
-        />
-      )}
+        {/* aria-live: скринридер зачитывает число найденных или «Loading» */}
+        <p className={styles.info} role="status" aria-live="polite">
+          {loading ? t.loadingList : data && t.found(data.count)}
+        </p>
+        {error ? (
+          <EmptyState
+            title={texts.app.errorTitle}
+            action={<Button onClick={retry}>{texts.app.retry}</Button>}
+          />
+        ) : empty ? (
+          <EmptyState
+            icon={<SearchX size={36} />}
+            title={t.emptyTitle}
+            description={t.emptyText}
+            action={
+              <Button variant="ghost" onClick={clearAll}>
+                {t.clearAll}
+              </Button>
+            }
+          />
+        ) : (
+          <PeopleGrid people={data?.results ?? null} />
+        )}
+        {data && (
+          <Pagination
+            page={params.page}
+            pageCount={data.pageCount}
+            onChange={changePage}
+            label={t.pagination.label}
+            prevLabel={t.pagination.prev}
+            nextLabel={t.pagination.next}
+            pageLabel={t.pagination.page}
+          />
+        )}
+      </MetaGate>
     </>
   );
 }

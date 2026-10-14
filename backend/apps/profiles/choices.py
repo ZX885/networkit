@@ -1,8 +1,8 @@
 """
 Справочники профиля: пары (код, название). В базе хранится код.
 
-Коды ТОЧНО совпадают с frontend/src/constants/*.js (countries, fields, interests, languages, goals,
-options). Файл создан по этим константам; при изменении списков правьте обе стороны.
+Единственный источник справочников: frontend получает их через GET /api/meta/ (apps/profiles/meta.py),
+своих списков во frontend нет. Коды в базе — строки из этих списков, менять их нельзя без миграции данных.
 """
 
 # Страны: код ISO 3166-1 alpha-2
@@ -213,3 +213,13 @@ GENDERS = [
 def codes(choices):
     """Список кодов из списка пар (код, название)."""
     return [code for code, _label in choices]
+
+
+def label_of(choices, code):
+    """Название по коду; неизвестный код (или пусто) — пустая строка."""
+    return dict(choices).get(code, "")
+
+
+def as_options(choices):
+    """Список пар → [{"code": ..., "label": ...}] (формат /api/meta/)."""
+    return [{"code": code, "label": label} for code, label in choices]

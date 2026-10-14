@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Bookmark } from 'lucide-react';
 import { listSavedPeople } from '../api/mock/people.js';
+import MetaGate from '../components/shared/MetaGate.jsx';
 import PageHeader from '../components/shared/PageHeader.jsx';
 import Button from '../components/ui/Button.jsx';
 import ButtonLink from '../components/ui/ButtonLink.jsx';
@@ -57,9 +58,11 @@ export default function SavedPage() {
   return (
     <>
       <PageHeader title={t.title} />
-      <div aria-live="polite" aria-busy={loading}>
-        {content}
-      </div>
+      <MetaGate>
+        <div aria-live="polite" aria-busy={loading}>
+          {content}
+        </div>
+      </MetaGate>
     </>
   );
 }

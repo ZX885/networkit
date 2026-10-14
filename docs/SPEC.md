@@ -62,7 +62,6 @@
 | school | CharField(100) blank | | P | O |
 | university | CharField(120) blank | свободный текст | P\* (`show_university`) | O |
 | field | CharField(40) | код из списка §1.8 (включая `other`) | P | O |
-| field_other | CharField(60) blank | обязателен, если `field = other`; иначе пуст | P | O |
 | year_level | CharField(40) blank | | P | O |
 | bio | TextField | ≤300 символов | P | O |
 | interests | ArrayField(CharField(30)) | коды из списка, ≤10, без дублей | P | O |
@@ -245,10 +244,11 @@ UniqueConstraint(reporter, target) при `status=open` (нельзя спами
   "interests": [{"code": "ai", "label": "Artificial Intelligence"}],
   "languages": [{"code": "uzbek", "label": "Uzbek"}],
   "goals": [{"code": "study_partners", "label": "Study partners"}],
-  "report_reasons": [{"code": "spam", "label": "Spam"}],
-  "limits": {"bio_max": 300, "message_max": 4000, "request_max": 500, "avatar_max_mb": 5, "min_age": 16}
+  "report_reasons": [],
+  "limits": {"bio_max": 300, "min_age": 13, "adult_age": 18, "interests_max": 10, "languages_max": 10, "goals_max": 8}
 }
 ```
+Ответ публичный и кэшируемый (`Cache-Control: public, max-age=3600`, `ETag`, на `If-None-Match` — `304`). `report_reasons` пока пустой (жалобы появятся позже); остальные лимиты (`message_max`, `avatar_max_mb` и др.) добавятся вместе с соответствующими функциями.
 `GET /api/stats/` → `{"members": 120, "fields": 14, "countries": 6}` (считаются только подтверждённые, не забаненные профили; клиент округляет для показа, как в legacy `updateHeroStats`).
 
 ### 3.2 Регистрация и подтверждение почты
@@ -260,7 +260,7 @@ UniqueConstraint(reporter, target) при `status=open` (нельзя спами
   "date_of_birth": "2002-03-14", "gender": "female",
   "country": "UZ", "region": "Tashkent", "city": "Tashkent",
   "status": "student", "school": "", "university": "WIUT",
-  "field": "computer_science", "field_other": "", "year_level": "2nd year",
+  "field": "computer_science", "year_level": "2nd year",
   "bio": "Building things.", "interests": ["ai"], "languages": ["english", "uzbek"], "goals": ["study_partners"],
   "contacts": {"telegram": "janedoe", "instagram": "", "whatsapp": "", "linkedin": "", "public_email": ""},
   "accepted_terms": true
@@ -301,9 +301,9 @@ UniqueConstraint(reporter, target) при `status=open` (нельзя спами
   "email": "jane@example.com", "email_verified": true, "pending_email": null,
   "username": "janedoe", "first_name": "Jane", "last_name": "Doe",
   "date_of_birth": "2002-03-14", "age": 24, "is_minor": false, "gender": "female",
-  "country": "UZ", "region": "Tashkent", "city": "Tashkent",
-  "status": "student", "school": "", "university": "WIUT",
-  "field": "computer_science", "field_other": "", "field_label": "Computer Science", "year_level": "2nd year",
+  "country": "UZ", "country_label": "Uzbekistan", "region": "Tashkent", "city": "Tashkent",
+  "status": "student", "status_label": "Student", "school": "", "university": "WIUT",
+  "field": "computer_science", "field_label": "Computer Science", "year_level": "2nd year",
   "bio": "Building things.", "interests": ["ai"], "languages": ["english", "uzbek"], "goals": ["study_partners"],
   "contacts": {"telegram": "janedoe", "instagram": "", "whatsapp": "", "linkedin": "", "public_email": ""},
   "avatar_url": "/media/avatars/3f2a....webp",
@@ -311,11 +311,11 @@ UniqueConstraint(reporter, target) при `status=open` (нельзя спами
   "created_at": "2026-10-10T08:15:30Z"
 }
 ```
-**PATCH `/api/me/`** — владелец. Частичное обновление. Изменяемые: `first_name, last_name, gender, country, region, city, status, school, university, field, field_other, year_level, bio, interests, languages, goals, contacts`. Игнорируются/отклоняются (read-only, ответ 400 `read_only_field`): `username, date_of_birth, email, is_banned, created_at, avatar_url, privacy`. → `200` Own-профиль.
+**PATCH `/api/me/`** — владелец. Частичное обновление. Изменяемые: `first_name, last_name, gender, country, region, city, status, school, university, field, year_level, bio, interests, languages, goals, contacts`. Отклоняются (read-only, ответ 400 `read_only_field`, запрос не применяется целиком): `username, date_of_birth, email, email_verified, age, is_minor, is_banned, created_at, avatar_url, privacy, country_label, field_label, status_label`. Неизвестные ключи (например, `phone`, `field_other` — их нет) молча игнорируются. Значения `interests/languages/goals` проверяются по справочнику (`invalid_choice`), без повторов (`duplicate`) и в пределах лимитов 10/10/8 (`too_many`). → `200` Own-профиль.
 **DELETE `/api/me/`** — владелец. `{"password": "..."}` → `204`; удаляется пользователь, профиль, файл аватара; сессия завершается. Ошибка: 400 поле `password` код `incorrect`.
 **PUT `/api/me/avatar/`** — владелец, `multipart/form-data`, поле `file`. → `200 {"avatar_url": "/media/avatars/<uuid>.webp"}`; старый файл удаляется. Ошибки: 400 `invalid_image`, 413 `file_too_large`, 415 `unsupported_media_type`.
 **DELETE `/api/me/avatar/`** → `204`.
-**GET/PATCH `/api/me/privacy/`** — владелец; тело/ответ `{"show_location":…, …}`. Для 16–17 попытка `show_contacts: true` → 400 `not_allowed_for_minors`.
+**GET/PATCH `/api/me/privacy/`** — владелец; тело/ответ `{"show_location":…, "show_university":…, "show_contacts":…, "show_in_search":…, "show_join_date":…}` (в PATCH любые из пяти). Младше 18 лет: `show_contacts: true` → 400 `not_allowed_for_minors` (поле `show_contacts`), а в ответах `show_contacts` всегда `false`.
 
 ### 3.6 Публичные профили и поиск
 Формат **Card** (поиск, избранное):
@@ -425,7 +425,6 @@ PUT/DELETE избранного и блокировок идемпотентны
 | school / year_level | ≤100 / ≤40 | `too_long` |
 | university | свободный текст ≤120, без `<` `>` | `too_long`, `invalid_characters` |
 | field | код справочника или `other` | `invalid_choice` |
-| field_other | при `field=other` обязателен, 1–60; иначе должен быть пуст | `required`, `not_allowed` |
 | bio | ≤300 символов, переводы строк сохраняются (`\r\n`→`\n`) | `too_long` |
 | interests / languages / goals | список кодов справочника, без дублей; максимум 10 / 10 / 8 | `invalid_choice`, `duplicate`, `too_many` |
 | telegram | `^@?[A-Za-z0-9_]{5,32}$` → хранится без `@` | `invalid` |
@@ -456,7 +455,7 @@ PUT/DELETE избранного и блокировок идемпотентны
 | is_banned, id, служебные поля | ❌ (бан → 403) | ❌ | ❌ | ❌ |
 | privacy (флаги) | ✅ | ❌ (флаги чужих не видны) | ❌ | ❌ |
 | username, first_name, last_name, avatar_url | ✅ | ✅ | ✅ | ✅ |
-| field/field_other/field_label, status, bio, interests | ✅ | ✅ | ✅ | field_label |
+| field/field_label, status, bio, interests | ✅ | ✅ | ✅ | field_label |
 | school, year_level, languages, goals | ✅ | ✅ | ❌ | ❌ |
 | city, region, country | ✅ | если `show_location` | city, country — если `show_location` | ❌ |
 | university | ✅ | если `show_university` | ❌ | ❌ |
@@ -472,7 +471,7 @@ PUT/DELETE избранного и блокировок идемпотентны
 ### 6.3 Скрытие в поиске и фильтрах
 Запрос `GET /profiles/` исключает: себя; забаненных; неподтверждённых; тех, у кого `show_in_search=false`; всех, с кем есть блокировка **в любую сторону**.
 Поиск и фильтры **не используют скрытые данные** (исправление F-15):
-- `q` ищет по `first_name`, `last_name`, `username`, названию направления (`field_label`/`field_other`); по `university` — **только** среди профилей с `show_university=true`;
+- `q` ищет по `first_name`, `last_name`, `username`, названию направления (`field_label`); по `university` — **только** среди профилей с `show_university=true`;
 - фильтры `country`, а также поиск по `city`/`region` применяются **только** к профилям с `show_location=true`;
 - `goal`, `language`, `field`, `status` — публичные поля, фильтруются всегда.
 Тест обязателен: профиль с `show_university=false` не находится по запросу своего вуза; профиль со `show_location=false` не находится фильтром по своей стране.

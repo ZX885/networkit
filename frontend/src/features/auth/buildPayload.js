@@ -1,4 +1,3 @@
-import { ADULT_AGE } from '../../constants/rules.js';
 import { toIsoDate } from '../../lib/date.js';
 import { getAgeFromData, parseBirthDate } from './validation.js';
 
@@ -7,9 +6,9 @@ const withoutAt = (value) => clean(value).replace(/^@/, '');
 
 // Собирает тело запроса POST /api/auth/register/ из данных формы (поля — как в backend).
 // Контакты отправляются только совершеннолетним; телефона и field_other нет.
-export function buildRegisterPayload(data) {
+export function buildRegisterPayload(data, limits) {
   const { year, month, day } = parseBirthDate(data);
-  const isAdult = (getAgeFromData(data) ?? 0) >= ADULT_AGE;
+  const isAdult = (getAgeFromData(data) ?? 0) >= limits.adult_age;
 
   const payload = {
     email: clean(data.email).toLowerCase(),

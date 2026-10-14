@@ -43,7 +43,12 @@ SECURE_HSTS_SECONDS = env.int("HSTS_SECONDS", default=0)
 # Перед Django стоят Vercel и Railway: настоящий IP клиента — вторая запись с конца в X-Forwarded-For.
 # Как проверить значение вручную — docs/DEPLOY.md.
 NUM_PROXIES = env.int("NUM_PROXIES", default=2)
-REST_FRAMEWORK = {**REST_FRAMEWORK, "NUM_PROXIES": NUM_PROXIES}
+REST_FRAMEWORK = {
+    **REST_FRAMEWORK,
+    "NUM_PROXIES": NUM_PROXIES,
+    # Только JSON: браузерный интерфейс DRF (формы, HTML) на боевом сайте не нужен
+    "DEFAULT_RENDERER_CLASSES": ["rest_framework.renderers.JSONRenderer"],
+}
 
 # Статика админки отдаётся самим приложением через WhiteNoise (сжатие + хэши в именах файлов)
 MIDDLEWARE = [

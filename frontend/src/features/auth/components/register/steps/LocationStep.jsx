@@ -1,5 +1,5 @@
 import Field from '../../../../../components/ui/Field.jsx';
-import { COUNTRIES } from '../../../../../constants/countries.js';
+import useMeta from '../../../../../api/useMeta.js';
 import { texts } from '../../../../../texts/en.js';
 import { errorText } from '../../../../../lib/apiErrors.js';
 
@@ -8,6 +8,7 @@ const f = texts.register.fields;
 // Шаг 2: страна, регион, город.
 export default function LocationStep({ form }) {
   const { data, errors, update } = form;
+  const { meta } = useMeta();
   const text = (name) => (e) => update(name, e.target.value);
 
   return (
@@ -21,7 +22,7 @@ export default function LocationStep({ form }) {
         error={errorText(errors.country)}
       >
         <option value="">{f.countryPlaceholder}</option>
-        {COUNTRIES.map((country) => (
+        {meta.countries.map((country) => (
           <option key={country.code} value={country.code}>
             {country.label}
           </option>

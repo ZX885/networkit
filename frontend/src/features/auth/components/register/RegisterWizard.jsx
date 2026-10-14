@@ -23,6 +23,8 @@ export default function RegisterWizard({ form }) {
   const StepComponent = STEPS[step - 1];
   const isLast = step === TOTAL_STEPS;
   const content = t.steps[step - 1];
+  const subtitle =
+    typeof content.subtitle === 'function' ? content.subtitle(form.limits) : content.subtitle;
 
   useEffect(() => {
     if (isFirstRender.current) {
@@ -50,7 +52,7 @@ export default function RegisterWizard({ form }) {
           <h2 ref={headingRef} className={styles.title} tabIndex={-1}>
             {content.title}
           </h2>
-          <p className={styles.subtitle}>{content.subtitle}</p>
+          <p className={styles.subtitle}>{subtitle}</p>
           {isLast && submitError && <Alert>{submitError}</Alert>}
           <StepComponent form={form} errors={errors} />
           <div className={styles.nav}>

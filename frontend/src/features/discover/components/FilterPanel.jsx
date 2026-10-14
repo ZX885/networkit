@@ -1,8 +1,4 @@
-import { COUNTRIES } from '../../../constants/countries.js';
-import { FIELDS } from '../../../constants/fields.js';
-import { GOALS } from '../../../constants/goals.js';
-import { LANGUAGES } from '../../../constants/languages.js';
-import { STATUSES } from '../../../constants/options.js';
+import useMeta from '../../../api/useMeta.js';
 import { texts } from '../../../texts/en.js';
 import Button from '../../../components/ui/Button.jsx';
 import Field from '../../../components/ui/Field.jsx';
@@ -33,6 +29,7 @@ function FilterSelect({ id, label, any, options, value, onChange }) {
 
 // Панель фильтров (legacy .fp). На ≤600px скрыта, пока не нажата кнопка «Filters» (open).
 export default function FilterPanel({ id, open, params, onChange, onClear }) {
+  const { meta } = useMeta();
   const select = (key, label, any, options) => (
     <FilterSelect
       id={`filter-${key}`}
@@ -51,11 +48,11 @@ export default function FilterPanel({ id, open, params, onChange, onClear }) {
       aria-label={t.filtersLabel}
       className={[styles.panel, open && styles.open].filter(Boolean).join(' ')}
     >
-      {select('country', t.country, t.allCountries, COUNTRIES)}
-      {select('field', t.field, t.allFields, FIELDS)}
-      {select('status', t.status, t.allStatuses, STATUSES)}
-      {select('goal', t.goal, t.anyGoal, GOALS)}
-      {select('language', t.language, t.anyLanguage, LANGUAGES)}
+      {select('country', t.country, t.allCountries, meta.countries)}
+      {select('field', t.field, t.allFields, meta.fields)}
+      {select('status', t.status, t.allStatuses, meta.statuses)}
+      {select('goal', t.goal, t.anyGoal, meta.goals)}
+      {select('language', t.language, t.anyLanguage, meta.languages)}
       <div className={styles.clear}>
         <Button variant="ghost" size="sm" onClick={onClear}>
           {t.clearAll}

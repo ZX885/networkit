@@ -1,5 +1,4 @@
-import { COUNTRIES } from '../../../constants/countries.js';
-import { STATUSES } from '../../../constants/options.js';
+import useMeta from '../../../api/useMeta.js';
 import { formatMonthYear, labelOf } from '../../../lib/labels.js';
 import { texts } from '../../../texts/en.js';
 import styles from './DetailsList.module.css';
@@ -8,12 +7,13 @@ const t = texts.profile.labels;
 
 // Таблица «Details» (legacy .dt): Status, Year, Region, Country, Joined — только то, что заполнено
 export default function DetailsList({ profile }) {
+  const { meta } = useMeta();
   const joined = formatMonthYear(profile.joined ?? profile.created_at);
   const rows = [
-    [t.status, profile.status && labelOf(STATUSES, profile.status)],
+    [t.status, profile.status && labelOf(meta.statuses, profile.status)],
     [t.year, profile.year_level],
     [t.region, profile.region],
-    [t.country, profile.country && labelOf(COUNTRIES, profile.country)],
+    [t.country, profile.country && labelOf(meta.countries, profile.country)],
     [t.joined, joined],
   ].filter(([, value]) => value);
 

@@ -1,7 +1,7 @@
 import ChipSelect from '../../../../../components/ui/ChipSelect.jsx';
 import Field from '../../../../../components/ui/Field.jsx';
 import FieldGroup from '../../../../../components/ui/FieldGroup.jsx';
-import { GENDERS } from '../../../../../constants/options.js';
+import useMeta from '../../../../../api/useMeta.js';
 import { texts } from '../../../../../texts/en.js';
 import BirthDateFields from '../BirthDateFields.jsx';
 import styles from './Steps.module.css';
@@ -11,7 +11,8 @@ const f = texts.register.fields;
 
 // Шаг 1: имя, username (с проверкой занятости), email, пароль, дата рождения, пол.
 export default function BasicInfoStep({ form }) {
-  const { data, errors, update, usernameStatus } = form;
+  const { data, errors, update, usernameStatus, limits } = form;
+  const { meta } = useMeta(); // справочники сервера (шаг показывается после их загрузки)
   const text = (name) => (e) => update(name, e.target.value);
 
   // Подсказка под username меняется по ходу проверки; «занято» показываем сразу, не ждём Continue
@@ -77,12 +78,12 @@ export default function BasicInfoStep({ form }) {
         onChange={text('password')}
         error={errorText(errors.password)}
       />
-      <BirthDateFields data={data} update={update} error={errorText(errors.birthDate)} />
+      <BirthDateFields data={data} update={update} error={errorText(errors.birthDate, limits)} />
       <FieldGroup legend={f.gender} optionalText={texts.common.optional}>
         <ChipSelect
           variant="pill"
           multiple={false}
-          options={GENDERS}
+          options={meta.genders}
           value={data.gender ? [data.gender] : []}
           onChange={([value]) => update('gender', value)}
         />

@@ -1,26 +1,14 @@
-import { useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
+import useMeta from '../../../api/useMeta.js';
+import Alert from '../../../components/ui/Alert.jsx';
 import Avatar from '../../../components/ui/Avatar.jsx';
 import Button from '../../../components/ui/Button.jsx';
 import Field from '../../../components/ui/Field.jsx';
-import useToast from '../../../components/ui/useToast.js';
-import { COUNTRIES } from '../../../constants/countries.js';
-import { FIELDS } from '../../../constants/fields.js';
-import { GOALS } from '../../../constants/goals.js';
-import { INTERESTS } from '../../../constants/interests.js';
-import { LANGUAGES } from '../../../constants/languages.js';
-import {
-  ADULT_AGE,
-  BIO_MAX,
-  CITY_MAX,
-  GOALS_MAX,
-  INTERESTS_MAX,
-  LANGUAGES_MAX,
-  NAME_MAX,
-  UNIVERSITY_MAX,
-  YEAR_LEVEL_MAX,
-} from '../../../constants/rules.js';
+import { GOAL_ICONS } from '../../../constants/goalIcons.js';
+import { CITY_MAX, NAME_MAX, UNIVERSITY_MAX, YEAR_LEVEL_MAX } from '../../../constants/rules.js';
 import { texts } from '../../../texts/en.js';
+import useEditProfile from '../hooks/useEditProfile.js';
 import ChipsSection from './ChipsSection.jsx';
 import ContactsFields from './ContactsFields.jsx';
 import styles from './EditProfileForm.module.css';
@@ -28,41 +16,41 @@ import ProfileSection from './ProfileSection.jsx';
 
 const t = texts.editProfile;
 
-const pick = (user) => ({
-  first_name: user.first_name,
-  last_name: user.last_name,
-  field: user.field,
-  university: user.university ?? '',
-  country: user.country,
-  city: user.city ?? '',
-  year_level: user.year_level ?? '',
-  bio: user.bio ?? '',
-  contacts: { ...user.contacts },
-  interests: user.interests ?? [],
-  languages: user.languages ?? [],
-  goals: user.goals ?? [],
-});
-
-// Форма редактирования профиля: заполняется данными пользователя, но пока ничего не отправляет
-// (Save → «Coming soon»). Отправку PATCH /api/me/ подключим в шаге B4.
+// Форма редактирования профиля: заполняется данными пользователя, Save отправляет PATCH /api/me/
+// (только изменённые поля). Списки и лимиты — с сервера (meta), ошибки показываются у полей.
 export default function EditProfileForm({ user }) {
-  const [values, setValues] = useState(() => pick(user));
-  const showToast = useToast();
-  const isMinor = user.is_minor || user.age < ADULT_AGE;
+  const { meta } = useMeta();
+  const { limits } = meta;
+  const form = useEditProfile(user, limits);
+  const { values, errors, saving } = form;
+  const formRef = useRef(null);
 
-  const set = (key, value) => setValues((prev) => ({ ...prev, [key]: value }));
+  // При ошибке сохранения фокус уходит на первое поле с ошибкой
+  useEffect(() => {
+    if (form.focusSignal) formRef.current?.querySelector('[aria-invalid="true"]')?.focus();
+  }, [form.focusSignal]);
+
   const text = (key) => ({
     value: values[key],
-    onChange: (event) => set(key, event.target.value),
+    onChange: (event) => form.set(key, event.target.value),
+    error: errors[key],
   });
+  const options = (list) =>
+    list.map((item) => (
+      <option key={item.code} value={item.code}>
+        {item.label}
+      </option>
+    ));
+  const goals = meta.goals.map((goal) => ({ ...goal, icon: GOAL_ICONS[goal.code] }));
 
   function handleSubmit(event) {
     event.preventDefault();
-    showToast(t.saveSoon);
+    form.submit();
   }
 
   return (
-    <form className={styles.form} onSubmit={handleSubmit}>
+    <form ref={formRef} className={styles.form} noValidate onSubmit={handleSubmit}>
+      {form.generalError && <Alert>{form.generalError}</Alert>}
       <ProfileSection title={t.photo}>
         <div className={styles.photo}>
           <Avatar
@@ -85,11 +73,7 @@ export default function EditProfileForm({ user }) {
         </div>
         <Field label={t.username} value={user.username} readOnly hint={t.usernameHint} />
         <Field as="select" label={t.field} {...text('field')}>
-          {FIELDS.map((item) => (
-            <option key={item.code} value={item.code}>
-              {item.label}
-            </option>
-          ))}
+          {options(meta.fields)}
         </Field>
         <Field
           label={t.university}
@@ -99,11 +83,7 @@ export default function EditProfileForm({ user }) {
         />
         <div className={styles.grid}>
           <Field as="select" label={t.country} {...text('country')}>
-            {COUNTRIES.map((item) => (
-              <option key={item.code} value={item.code}>
-                {item.label}
-              </option>
-            ))}
+            {options(meta.countries)}
           </Field>
           <Field label={t.city} maxLength={CITY_MAX} {...text('city')} />
         </div>
@@ -117,10 +97,10 @@ export default function EditProfileForm({ user }) {
         <Field
           as="textarea"
           label={t.bio}
-          optionalText={t.bioLimit(BIO_MAX)}
-          maxLength={BIO_MAX}
+          optionalText={t.bioLimit(limits.bio_max)}
+          maxLength={limits.bio_max}
           rows={4}
-          hint={t.bioCount(values.bio.length, BIO_MAX)}
+          hint={t.bioCount(values.bio.length, limits.bio_max)}
           {...text('bio')}
         />
       </ProfileSection>
@@ -128,36 +108,42 @@ export default function EditProfileForm({ user }) {
       <ProfileSection title={t.contacts}>
         <ContactsFields
           values={values.contacts}
-          disabled={isMinor}
-          onChange={(key, value) => set('contacts', { ...values.contacts, [key]: value })}
+          errors={errors}
+          disabled={form.isMinor}
+          onChange={form.setContact}
         />
       </ProfileSection>
 
       <ChipsSection
         title={t.interests}
-        options={INTERESTS}
+        options={meta.interests}
         value={values.interests}
-        max={INTERESTS_MAX}
-        onChange={(next) => set('interests', next)}
+        max={limits.interests_max}
+        error={errors.interests}
+        onChange={(next) => form.set('interests', next)}
       />
       <ChipsSection
         title={t.languages}
-        options={LANGUAGES}
+        options={meta.languages}
         value={values.languages}
-        max={LANGUAGES_MAX}
-        onChange={(next) => set('languages', next)}
+        max={limits.languages_max}
+        error={errors.languages}
+        onChange={(next) => form.set('languages', next)}
       />
       <ChipsSection
         title={t.goals}
-        options={GOALS}
+        options={goals}
         value={values.goals}
-        max={GOALS_MAX}
+        max={limits.goals_max}
         variant="pill"
-        onChange={(next) => set('goals', next)}
+        error={errors.goals}
+        onChange={(next) => form.set('goals', next)}
       />
 
       <div className={styles.actions}>
-        <Button type="submit">{t.save}</Button>
+        <Button type="submit" loading={saving}>
+          {t.save}
+        </Button>
         <Link to="/me" className={styles.cancel}>
           {t.cancel}
         </Link>

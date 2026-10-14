@@ -1,6 +1,6 @@
 import { Bookmark, MessageCircle } from 'lucide-react';
-import { INTERESTS } from '../../constants/interests.js';
-import { formatPlace, fullName, labelOf, statusLabel } from '../../lib/labels.js';
+import useMeta from '../../api/useMeta.js';
+import { formatPlace, fullName, labelOf } from '../../lib/labels.js';
 import { texts } from '../../texts/en.js';
 import Avatar from '../ui/Avatar.jsx';
 import Button from '../ui/Button.jsx';
@@ -17,11 +17,14 @@ const MAX_TAGS = 3;
 // onSavedChange(username, saved) — чтобы список (Saved) мог убрать карточку.
 export default function PersonCard({ person, onSavedChange }) {
   const name = fullName(person);
+  const { meta } = useMeta(); // карточки показываются после загрузки справочников (MetaGate)
   const openChat = useOpenChat();
   const { saved, busy, toggle } = useSavedToggle(person.username, person.is_saved, (next) =>
     onSavedChange?.(person.username, next),
   );
-  const place = [formatPlace(person), statusLabel(person.status)].filter(Boolean).join(' · ');
+  const place = [formatPlace(person, meta.countries), labelOf(meta.statuses, person.status)]
+    .filter(Boolean)
+    .join(' · ');
 
   return (
     <article className={styles.card}>
@@ -41,7 +44,7 @@ export default function PersonCard({ person, onSavedChange }) {
       {person.bio && <p className={`${styles.bio} user-text`}>{person.bio}</p>}
       <div className={styles.tags}>
         {person.interests.slice(0, MAX_TAGS).map((code) => (
-          <Tag key={code}>{labelOf(INTERESTS, code)}</Tag>
+          <Tag key={code}>{labelOf(meta.interests, code)}</Tag>
         ))}
       </div>
       <div className={styles.actions}>

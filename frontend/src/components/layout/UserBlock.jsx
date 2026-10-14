@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { fullName, statusLabel } from '../../lib/labels.js';
+import { fullName } from '../../lib/labels.js';
 import Avatar from '../ui/Avatar.jsx';
 import styles from './UserBlock.module.css';
 
@@ -16,7 +16,7 @@ export default function UserBlock({ user }) {
       />
       <span className={styles.text}>
         <span className={`${styles.name} user-text`}>{fullName(user)}</span>
-        <span className={styles.role}>{statusLabel(user.status)}</span>
+        <span className={styles.role}>{user.status_label}</span>
       </span>
     </Link>
   );
