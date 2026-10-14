@@ -8,7 +8,7 @@ const LABELS = texts.profile.contactLabels;
 const KEYS = ['telegram', 'instagram', 'whatsapp', 'linkedin', 'public_email'];
 
 // Контакты в форме редактирования. Для младше 18 лет поля отключены с пояснением (правило сервера).
-export default function ContactsFields({ values, onChange, disabled }) {
+export default function ContactsFields({ values, errors, onChange, disabled }) {
   return (
     <>
       {disabled && <p className={styles.note}>{t.contactsMinor}</p>}
@@ -22,6 +22,7 @@ export default function ContactsFields({ values, onChange, disabled }) {
             maxLength={key === 'public_email' ? EMAIL_MAX : 100}
             disabled={disabled}
             value={values[key] ?? ''}
+            error={errors[`contacts.${key}`]}
             onChange={(event) => onChange(key, event.target.value)}
           />
         ))}

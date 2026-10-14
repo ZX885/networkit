@@ -1,13 +1,7 @@
 import {
-  ADULT_AGE,
-  BIO_MAX,
   CITY_MAX,
   EMAIL_MAX,
-  GOALS_MAX,
-  INTERESTS_MAX,
-  LANGUAGES_MAX,
   MAX_AGE,
-  MIN_AGE,
   NAME_MAX,
   PASSWORD_MAX,
   PASSWORD_MIN,
@@ -49,7 +43,7 @@ export function getAgeFromData(data) {
   return getAge(date.year, date.month, date.day);
 }
 
-function checkBirthDate(data) {
+function checkBirthDate(data, limits) {
   if (isEmpty(data.birthDay) || isEmpty(data.birthMonth) || isEmpty(data.birthYear)) {
     return 'dateRequired';
   }
@@ -57,7 +51,7 @@ function checkBirthDate(data) {
   if (!date || !isRealDate(date.year, date.month, date.day)) return 'dateInvalid';
   if (new Date(date.year, date.month - 1, date.day) > new Date()) return 'dateFuture';
   const age = getAge(date.year, date.month, date.day);
-  if (age < MIN_AGE) return 'tooYoung';
+  if (age < limits.min_age) return 'tooYoung';
   if (age > MAX_AGE) return 'dateTooOld';
   return null;
 }
@@ -108,13 +102,13 @@ const checkCount = (list, max, errorCode) => (list.length > max ? errorCode : nu
 // ── Шаги ──
 
 const stepValidators = {
-  1: (d, { usernameStatus }) => ({
+  1: (d, { usernameStatus, limits }) => ({
     firstName: checkName(d.firstName),
     lastName: checkName(d.lastName),
     username: checkUsername(d.username, usernameStatus),
     email: checkEmail(d.email),
     password: checkPassword(d.password),
-    birthDate: checkBirthDate(d),
+    birthDate: checkBirthDate(d, limits),
   }),
   2: (d) => ({
     country: checkRequired(d.country),
@@ -128,10 +122,14 @@ const stepValidators = {
     field: checkRequired(d.field),
     yearLevel: checkMaxLength(d.yearLevel, YEAR_LEVEL_MAX),
   }),
-  4: (d) => ({ interests: checkCount(d.interests, INTERESTS_MAX, 'tooManyInterests') }),
-  5: (d) => ({ languages: checkCount(d.languages, LANGUAGES_MAX, 'tooManyLanguages') }),
-  6: (d) => ({ bio: checkMaxLength(d.bio, BIO_MAX) }),
-  7: (d) => ({ goals: checkCount(d.goals, GOALS_MAX, 'tooManyGoals') }),
+  4: (d, { limits }) => ({
+    interests: checkCount(d.interests, limits.interests_max, 'tooManyInterests'),
+  }),
+  5: (d, { limits }) => ({
+    languages: checkCount(d.languages, limits.languages_max, 'tooManyLanguages'),
+  }),
+  6: (d, { limits }) => ({ bio: checkMaxLength(d.bio, limits.bio_max) }),
+  7: (d, { limits }) => ({ goals: checkCount(d.goals, limits.goals_max, 'tooManyGoals') }),
   8: (d, { isAdult }) => ({
     // Контакты проверяем только у совершеннолетних: у остальных поля не показываются
     telegram: isAdult ? checkContact(d.telegram, TELEGRAM_REGEX, 'telegramInvalid') : null,
@@ -147,17 +145,22 @@ const stepValidators = {
   }),
 };
 
-// Проверка одного шага. usernameStatus — результат проверки занятости имени (нужен шагу 1).
-export function validateStep(step, data, usernameStatus = 'idle') {
-  const context = { usernameStatus, isAdult: (getAgeFromData(data) ?? 0) >= ADULT_AGE };
+// Проверка одного шага. usernameStatus — результат проверки занятости имени (нужен шагу 1);
+// limits — meta.limits с сервера (возраст и максимумы).
+export function validateStep(step, data, usernameStatus, limits) {
+  const context = {
+    usernameStatus,
+    limits,
+    isAdult: (getAgeFromData(data) ?? 0) >= limits.adult_age,
+  };
   const result = stepValidators[step](data, context);
   return Object.fromEntries(Object.entries(result).filter(([, code]) => code));
 }
 
 // Проверка всех шагов перед отправкой: номер первого неверного шага или 0
-export function findInvalidStep(data, usernameStatus) {
+export function findInvalidStep(data, usernameStatus, limits) {
   for (let step = 1; step <= 8; step += 1) {
-    if (Object.keys(validateStep(step, data, usernameStatus)).length > 0) return step;
+    if (Object.keys(validateStep(step, data, usernameStatus, limits)).length > 0) return step;
   }
   return 0;
 }

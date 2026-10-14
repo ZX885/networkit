@@ -1,6 +1,5 @@
 import { useCallback, useState } from 'react';
 import { register } from '../../../api/auth.js';
-import { ADULT_AGE } from '../../../constants/rules.js';
 import { apiErrorText, fieldErrorText } from '../../../lib/apiErrors.js';
 import { buildRegisterPayload } from '../buildPayload.js';
 import { mapServerErrors } from '../serverErrors.js';
@@ -41,9 +40,10 @@ const INITIAL_DATA = {
 
 // Всё состояние мастера регистрации: текущий шаг, введённые данные (сохраняются при
 // переходах назад), ошибки, отправка. Шаги только читают и меняют данные через update().
+// limits — meta.limits с сервера (возраст и максимумы), хук вызывается, когда справочники уже загружены.
 // Ошибки бывают клиентские (проверка шага) и серверные (ответ API): серверные остаются у поля,
 // пока человек его не изменит.
-export default function useRegisterForm() {
+export default function useRegisterForm(limits) {
   const [step, setStep] = useState(1);
   const [data, setData] = useState(INITIAL_DATA);
   const [clientErrors, setClientErrors] = useState({});
@@ -54,7 +54,7 @@ export default function useRegisterForm() {
   const [registeredEmail, setRegisteredEmail] = useState('');
 
   const usernameStatus = useUsernameCheck(data.username);
-  const isAdult = (getAgeFromData(data) ?? 0) >= ADULT_AGE;
+  const isAdult = (getAgeFromData(data) ?? 0) >= limits.adult_age;
   const errors = { ...serverErrors, ...clientErrors };
 
   // Меняет поле и убирает его ошибки (поля даты относятся к одной ошибке birthDate)
@@ -73,7 +73,7 @@ export default function useRegisterForm() {
 
   // Проверяет шаг; при ошибках показывает их и возвращает false
   function checkStep(stepNumber) {
-    const found = validateStep(stepNumber, data, usernameStatus);
+    const found = validateStep(stepNumber, data, usernameStatus, limits);
     setClientErrors(found);
     if (Object.keys(found).length === 0) return true;
     setFocusSignal((n) => n + 1);
@@ -97,7 +97,7 @@ export default function useRegisterForm() {
       const general = [...error.nonFieldErrors, ...unmapped];
       setServerErrors(fieldErrors);
       setClientErrors({});
-      setSubmitError(general.length > 0 ? fieldErrorText(general[0]) : '');
+      setSubmitError(general.length > 0 ? fieldErrorText(general[0], limits) : '');
       if (firstStep > 0) {
         setStep(firstStep);
         setFocusSignal((n) => n + 1);
@@ -110,17 +110,17 @@ export default function useRegisterForm() {
   async function submit() {
     if (!checkStep(TOTAL_STEPS)) return;
     // Перед отправкой проверяем всё ещё раз (данные могли измениться на прошлых шагах)
-    const invalidStep = findInvalidStep(data, usernameStatus);
+    const invalidStep = findInvalidStep(data, usernameStatus, limits);
     if (invalidStep) {
       setStep(invalidStep);
-      setClientErrors(validateStep(invalidStep, data, usernameStatus));
+      setClientErrors(validateStep(invalidStep, data, usernameStatus, limits));
       setFocusSignal((n) => n + 1);
       return;
     }
     setSubmitting(true);
     setSubmitError('');
     try {
-      const result = await register(buildRegisterPayload(data));
+      const result = await register(buildRegisterPayload(data, limits));
       setRegisteredEmail(result.email);
     } catch (error) {
       handleSubmitError(error);
@@ -139,6 +139,7 @@ export default function useRegisterForm() {
     registeredEmail,
     usernameStatus,
     isAdult,
+    limits,
     update,
     goNext,
     goBack,

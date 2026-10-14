@@ -1,5 +1,6 @@
 import { useParams } from 'react-router-dom';
 import BackLink from '../components/shared/BackLink.jsx';
+import MetaGate from '../components/shared/MetaGate.jsx';
 import PageHeader from '../components/shared/PageHeader.jsx';
 import Button from '../components/ui/Button.jsx';
 import Spinner from '../components/ui/Spinner.jsx';
@@ -51,9 +52,11 @@ export default function ProfilePage() {
           <ProfileActions key={profile.username} profile={profile} />
         </div>
       </div>
-      <ProfileView profile={profile}>
-        <ReportBlock />
-      </ProfileView>
+      <MetaGate>
+        <ProfileView profile={profile}>
+          <ReportBlock />
+        </ProfileView>
+      </MetaGate>
     </>
   );
 }

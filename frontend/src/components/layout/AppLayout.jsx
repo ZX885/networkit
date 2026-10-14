@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { Menu } from 'lucide-react';
+import { loadMeta } from '../../api/meta.js';
 import { texts } from '../../texts/en.js';
 import styles from './AppLayout.module.css';
 import Sidebar from './Sidebar.jsx';
@@ -19,6 +20,12 @@ export default function AppLayout({ children }) {
   const mainRef = useRef(null);
 
   useFocusOnNavigate(mainRef);
+
+  // Прогрев кэша справочников (GET /api/meta/): один фоновый запрос при входе в приложение, без
+  // индикатора. Ошибку игнорируем: страницы, которым справочники нужны, сами покажут «Try again».
+  useEffect(() => {
+    loadMeta().catch(() => {});
+  }, []);
 
   const closeMenu = useCallback(() => {
     setOpenedAt(null);

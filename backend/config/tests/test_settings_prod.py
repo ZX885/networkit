@@ -42,6 +42,7 @@ print("JSON:" + json.dumps({
     "middleware": settings.MIDDLEWARE[:2],
     "email_backend": settings.EMAIL_BACKEND,
     "static_root": str(settings.STATIC_ROOT),
+    "renderers": settings.REST_FRAMEWORK["DEFAULT_RENDERER_CLASSES"],
 }))
 """
 
@@ -76,6 +77,7 @@ class ProdSettingsTests(SimpleTestCase):
         self.assertEqual(conf["admin_url"], "admin/")
         self.assertEqual(conf["middleware"][1], "whitenoise.middleware.WhiteNoiseMiddleware")
         self.assertTrue(conf["static_root"].endswith("staticfiles"))
+        self.assertEqual(conf["renderers"], ["rest_framework.renderers.JSONRenderer"])  # без browsable API
 
     def test_csrf_origins_default_to_site_url_without_trailing_slash(self):
         code, conf, err = load_prod(CSRF_TRUSTED_ORIGINS=None)

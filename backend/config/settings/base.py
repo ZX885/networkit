@@ -150,12 +150,17 @@ if not ADMIN_URL.endswith("/"):
 # Только для демо с тестовыми данными: на боевом сайте включать нельзя (ссылка = вход в чужой аккаунт).
 DEMO_LOG_VERIFY_LINKS = env.bool("DEMO_LOG_VERIFY_LINKS", default=False)
 
-# Логи приложения users (DEMO link) идут в консоль: на Railway это stdout контейнера
+# Логи приложения users (DEMO link) и ошибки сервера идут в консоль: на Railway это stdout контейнера
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
     "handlers": {"console": {"class": "logging.StreamHandler"}},
-    "loggers": {"apps.users": {"handlers": ["console"], "level": "INFO"}},
+    "loggers": {
+        "apps.users": {"handlers": ["console"], "level": "INFO"},
+        # Трейсбеки ошибок попадают в stdout (на Railway это логи сервиса)
+        "config.exceptions": {"handlers": ["console"], "level": "ERROR"},
+        "django.request": {"handlers": ["console"], "level": "ERROR"},
+    },
 }
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 

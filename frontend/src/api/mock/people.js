@@ -1,10 +1,27 @@
 // MOCK: вымышленные люди для Discover, Saved и страницы профиля. Заменим реальными запросами
 // GET /api/profiles/, /api/profiles/{username}/, /api/saved/ в шагах B4–B7.
 // Формат Card — по docs/SPEC.md §3.6; для страницы профиля добавлены поля формата Public.
-import { fieldLabel } from '../../lib/labels.js';
 import { sleep } from './delay.js';
 
 export const PAGE_SIZE = 12;
+
+// Названия направлений для мока (настоящий сервер отдаёт field_label сам)
+const FIELD_LABELS = {
+  computer_science: 'Computer Science',
+  finance: 'Finance',
+  design: 'Design',
+  software_engineering: 'Software Engineering',
+  biology: 'Biology',
+  law: 'Law',
+  data_science: 'Data Science',
+  mechanical_engineering: 'Mechanical Engineering',
+  marketing: 'Marketing',
+  architecture: 'Architecture',
+  psychology: 'Psychology',
+  economics: 'Economics',
+  medicine: 'Medicine',
+  physics: 'Physics',
+};
 
 // prettier-ignore
 const PEOPLE = [
@@ -34,7 +51,7 @@ function toCard(person) {
     last_name: person.last_name,
     avatar_url: null,
     field: person.field,
-    field_label: fieldLabel(person.field),
+    field_label: FIELD_LABELS[person.field] ?? person.field,
     status: person.status,
     city: person.city,
     country: person.country,

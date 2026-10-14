@@ -1,28 +1,31 @@
 import ChipSelect from '../../../../../components/ui/ChipSelect.jsx';
 import FieldGroup from '../../../../../components/ui/FieldGroup.jsx';
-import { GOALS } from '../../../../../constants/goals.js';
-import { GOALS_MAX } from '../../../../../constants/rules.js';
+import useMeta from '../../../../../api/useMeta.js';
+import { GOAL_ICONS } from '../../../../../constants/goalIcons.js';
 import { texts } from '../../../../../texts/en.js';
 import { errorText } from '../../../../../lib/apiErrors.js';
 
 const f = texts.register.fields;
 
-// Шаг 7: цели (до 8), список с иконками как в legacy.
+// Шаг 7: цели (максимум — из meta.limits), список с иконками как в legacy.
 export default function GoalsStep({ form }) {
-  const { data, errors, update } = form;
+  const { data, errors, update, limits } = form;
+  const { meta } = useMeta();
+  // Список целей приходит с сервера, иконки добавляем по коду
+  const options = meta.goals.map((goal) => ({ ...goal, icon: GOAL_ICONS[goal.code] }));
 
   return (
     <FieldGroup
       legend={f.goals}
       legendHidden
-      hint={`${data.goals.length}/${GOALS_MAX}`}
-      error={errorText(errors.goals)}
+      hint={`${data.goals.length}/${limits.goals_max}`}
+      error={errorText(errors.goals, limits)}
     >
       <ChipSelect
         variant="list"
-        options={GOALS}
+        options={options}
         value={data.goals}
-        max={GOALS_MAX}
+        max={limits.goals_max}
         onChange={(next) => update('goals', next)}
       />
     </FieldGroup>

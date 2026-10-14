@@ -1,8 +1,12 @@
 import { texts } from '../texts/en.js';
 
-// Текст ошибки поля от сервера: по коду из словаря, иначе — message сервера
-export function fieldErrorText(item) {
-  return texts.apiErrors[item.code] ?? item.message;
+// Текст из словаря: строка или функция от лимитов сервера (meta.limits), например «at least 13 years»
+const resolve = (text, limits) => (typeof text === 'function' ? text(limits ?? {}) : text);
+
+// Текст ошибки поля от сервера: по коду из словаря, иначе — message сервера.
+// limits — meta.limits (нужны сообщениям с числами: возраст, максимумы)
+export function fieldErrorText(item, limits) {
+  return resolve(texts.apiErrors[item.code], limits) ?? item.message;
 }
 
 // Текст общей ошибки запроса (ApiError); для лимита подставляет секунды ожидания
@@ -16,8 +20,8 @@ export function apiErrorText(error) {
 
 // Ошибка поля формы бывает клиентской (строка-код из validation.js) или серверной ({code, message}).
 // Возвращает текст для показа или undefined, если ошибки нет.
-export function errorText(value) {
+export function errorText(value, limits) {
   if (!value) return undefined;
-  if (typeof value === 'string') return texts.validation[value] ?? value;
-  return fieldErrorText(value);
+  if (typeof value === 'string') return resolve(texts.validation[value], limits) ?? value;
+  return fieldErrorText(value, limits);
 }

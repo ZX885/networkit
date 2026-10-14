@@ -1,6 +1,7 @@
 """Единый формат ошибок API (docs/SPEC.md §3.0)."""
 
 import json
+from unittest import mock
 
 from django.test import RequestFactory
 from django.utils import timezone
@@ -80,6 +81,24 @@ class ErrorFormatTests(APITestCase):
             json.loads(response.content),
             {"error": {"code": "server_error", "message": "Something went wrong."}},
         )
+
+    def test_unhandled_exception_is_logged_with_traceback_and_hidden_from_client(self):
+        self.client.force_login(make_user(email="crash@example.com"))
+
+        with mock.patch("apps.profiles.views.MeView.get", side_effect=RuntimeError("secret boom")):
+            with self.assertLogs("config.exceptions", "ERROR") as logs:
+                response = self.client.get("/api/me/")
+
+        self.assertEqual(response.status_code, 500)
+        self.assertEqual(
+            response.json(),
+            {"error": {"code": "server_error", "message": "Something went wrong."}},
+        )
+        self.assertNotIn("secret boom", response.content.decode())  # клиент не видит причину
+        record = logs.records[0]
+        self.assertIsNotNone(record.exc_info)  # в логе есть трейсбек
+        self.assertIn("GET /api/me/", record.getMessage())
+        self.assertIn("secret boom", str(record.exc_info[1]))
 
     def test_server_error_for_site_pages_is_html(self):
         response = server_error_view(RequestFactory().get("/some-page/"))

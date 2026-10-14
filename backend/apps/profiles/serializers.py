@@ -104,6 +104,38 @@ def forbid_minor_contacts(contacts, birth_date):
         raise serializers.ValidationError({"contacts": [error]})
 
 
+def privacy_of(profile):
+    """5 флагов приватности. Контакты несовершеннолетнего всегда скрыты (show_contacts = False)."""
+    flags = {name: getattr(profile, name) for name in PRIVACY_FIELDS}
+    if profile.is_minor():
+        flags["show_contacts"] = False
+    return flags
+
+
+class PrivacySerializer(serializers.Serializer):
+    """PATCH /api/me/privacy/: любые из 5 флагов (serializer создаётся с partial=True)."""
+
+    show_location = serializers.BooleanField()
+    show_university = serializers.BooleanField()
+    show_contacts = serializers.BooleanField()
+    show_in_search = serializers.BooleanField()
+    show_join_date = serializers.BooleanField()
+
+    def validate_show_contacts(self, value):
+        if value and self.instance.is_minor():
+            raise serializers.ValidationError(
+                "Contacts are available from age 18.", code="not_allowed_for_minors"
+            )
+        return value
+
+    def update(self, profile, validated_data):
+        for name, value in validated_data.items():
+            setattr(profile, name, value)
+        if validated_data:
+            profile.save(update_fields=[*validated_data, "updated_at"])
+        return profile
+
+
 class OwnProfileSerializer(serializers.ModelSerializer):
     """Профиль для самого владельца (GET /api/me/ и ответ входа): включает личные поля."""
 
@@ -114,6 +146,10 @@ class OwnProfileSerializer(serializers.ModelSerializer):
     contacts = serializers.SerializerMethodField()
     privacy = serializers.SerializerMethodField()
     avatar_url = serializers.SerializerMethodField()
+    # Названия по кодам: клиенту не нужно держать свои справочники, чтобы показать профиль
+    country_label = serializers.SerializerMethodField()
+    field_label = serializers.SerializerMethodField()
+    status_label = serializers.SerializerMethodField()
 
     class Meta:
         model = Profile
@@ -128,12 +164,15 @@ class OwnProfileSerializer(serializers.ModelSerializer):
             "is_minor",
             "gender",
             "country",
+            "country_label",
             "region",
             "city",
             "status",
+            "status_label",
             "school",
             "university",
             "field",
+            "field_label",
             "year_level",
             "bio",
             "interests",
@@ -159,7 +198,16 @@ class OwnProfileSerializer(serializers.ModelSerializer):
         return {name: getattr(obj, name) for name in CONTACT_FIELDS}
 
     def get_privacy(self, obj):
-        return {name: getattr(obj, name) for name in PRIVACY_FIELDS}
+        return privacy_of(obj)
+
+    def get_country_label(self, obj):
+        return choices.label_of(choices.COUNTRIES, obj.country)
+
+    def get_field_label(self, obj):
+        return choices.label_of(choices.FIELDS, obj.field)
+
+    def get_status_label(self, obj):
+        return choices.label_of(choices.STATUSES, obj.status)
 
     def get_avatar_url(self, obj):
         return None  # загрузка аватара появится позже

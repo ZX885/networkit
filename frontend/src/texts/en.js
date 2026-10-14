@@ -1,5 +1,3 @@
-import { BIO_MAX, GOALS_MAX, INTERESTS_MAX, LANGUAGES_MAX, MIN_AGE } from '../constants/rules.js';
-
 // Все тексты интерфейса в одном месте (подготовка к i18n). Сгруппированы по страницам и фичам.
 // Тексты лендинга и форм взяты из legacy index.html / app.js; изменённые утверждения помечены
 // комментарием «ИЗМЕНЕНО».
@@ -228,10 +226,10 @@ export const texts = {
       { title: 'Basic information', subtitle: 'Tell us a little about yourself.' },
       { title: 'Where are you based?', subtitle: 'Help others find people near them.' },
       { title: 'Education & career', subtitle: 'Help others find people at the same stage.' },
-      { title: 'Your interests', subtitle: `Pick up to ${INTERESTS_MAX}.` },
+      { title: 'Your interests', subtitle: (limits) => `Pick up to ${limits.interests_max}.` },
       { title: 'Languages you speak', subtitle: 'Help find people you can talk to.' },
       { title: 'About you', subtitle: 'Write a short bio. The first thing people see.' },
-      { title: 'What are your goals?', subtitle: `Select up to ${GOALS_MAX}.` },
+      { title: 'What are your goals?', subtitle: (limits) => `Select up to ${limits.goals_max}.` },
       {
         title: 'Contact details',
         // ИЗМЕНЕНО: legacy «Your phone number is private and only for verification. Optional links appear as buttons on your profile.»
@@ -277,7 +275,7 @@ export const texts = {
       interests: 'Interests',
       languages: 'Languages',
       goals: 'Goals',
-      bio: `Bio (max ${BIO_MAX} characters)`,
+      bio: (max) => `Bio (max ${max} characters)`,
       bioPlaceholder: "Tell others who you are, what you study, and what you're passionate about…",
       telegram: 'Telegram',
       telegramPlaceholder: '@username',
@@ -360,9 +358,10 @@ export const texts = {
     back: 'Back',
     loading: 'Loading',
     errorTitle: 'Something went wrong',
+    metaErrorTitle: "Couldn't load the form data",
     retry: 'Try again',
     comingSoon: 'Coming soon',
-    savedDemo: 'Saved (demo)',
+    saved: 'Saved',
   },
 
   // Discover (MOCK-данные, см. api/mock/people.js)
@@ -487,7 +486,9 @@ export const texts = {
     goals: 'Goals',
     save: 'Save changes',
     cancel: 'Cancel',
-    saveSoon: 'Saving is coming soon',
+    saved: 'Profile saved',
+    noChanges: 'No changes to save',
+    generalError: 'Some fields need attention',
   },
 
   // Настройки (UI; сохранение подключим позже)
@@ -598,7 +599,7 @@ export const texts = {
     invalid_format: 'Use 3–30 characters: lowercase letters, digits and _, starting with a letter',
     reserved: 'This username is not available',
     taken: 'This username is already taken',
-    too_young: `You must be at least ${MIN_AGE} years old to join`,
+    too_young: (limits) => `You must be at least ${limits.min_age} years old to join`,
     too_old: 'Please check the year of birth',
     future: 'Date of birth cannot be in the future',
     too_many: 'You selected too many items',
@@ -639,11 +640,11 @@ export const texts = {
     dateInvalid: 'This date does not exist',
     dateFuture: 'Date of birth cannot be in the future',
     dateTooOld: 'Please check the year of birth',
-    tooYoung: `You must be at least ${MIN_AGE} years old to join`,
+    tooYoung: (limits) => `You must be at least ${limits.min_age} years old to join`,
     tooLong: 'This is too long',
-    tooManyInterests: `Choose up to ${INTERESTS_MAX} interests`,
-    tooManyLanguages: `Choose up to ${LANGUAGES_MAX} languages`,
-    tooManyGoals: `Choose up to ${GOALS_MAX} goals`,
+    tooManyInterests: (limits) => `Choose up to ${limits.interests_max} interests`,
+    tooManyLanguages: (limits) => `Choose up to ${limits.languages_max} languages`,
+    tooManyGoals: (limits) => `Choose up to ${limits.goals_max} goals`,
     telegramInvalid: 'Telegram: 5–32 letters, digits or _',
     instagramInvalid: 'Instagram: up to 30 letters, digits, dots or _',
     whatsappInvalid: 'WhatsApp: international format, e.g. +998901234567',
