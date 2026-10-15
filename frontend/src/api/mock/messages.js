@@ -130,8 +130,3 @@ export async function sendMessage(id, body) {
   emit();
   return created;
 }
-
-// Есть ли уже диалог с этим человеком (id для /messages/:id); null — нет
-export function findConversationId(username) {
-  return conversations.find((c) => c.other_user.username === username)?.id ?? null;
-}

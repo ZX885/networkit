@@ -15,6 +15,7 @@ from .models import (
     BIO_MAX,
     Profile,
 )
+from .visibility import ProfileVisibility
 from .validators import (
     CONTACT_CLEANERS,
     validate_no_angle_brackets,
@@ -232,3 +233,17 @@ class MeUpdateSerializer(ProfileFieldsSerializer):
             setattr(profile, name, value)
         profile.save()
         return profile
+
+
+class CardSerializer(serializers.BaseSerializer):
+    """Card (поиск): все решения о показе полей — в ProfileVisibility."""
+
+    def to_representation(self, profile):
+        return ProfileVisibility(profile).card()
+
+
+class PublicProfileSerializer(serializers.BaseSerializer):
+    """Public (страница профиля): скрытое поле — null, а не пропуск."""
+
+    def to_representation(self, profile):
+        return ProfileVisibility(profile).public()

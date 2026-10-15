@@ -1,9 +1,7 @@
-// MOCK: вымышленные люди для Discover, Saved и страницы профиля. Заменим реальными запросами
-// GET /api/profiles/, /api/profiles/{username}/, /api/saved/ в шагах B4–B7.
-// Формат Card — по docs/SPEC.md §3.6; для страницы профиля добавлены поля формата Public.
+// MOCK: вымышленные люди только для страницы Saved. Поиск и профиль уже настоящие
+// (api/profiles.js); Saved заменим запросом GET /api/saved/ в шаге B9.
+// Формат Card — по docs/SPEC.md §3.6.
 import { sleep } from './delay.js';
-
-export const PAGE_SIZE = 12;
 
 // Названия направлений для мока (настоящий сервер отдаёт field_label сам)
 const FIELD_LABELS = {
@@ -61,48 +59,7 @@ function toCard(person) {
   };
 }
 
-// Поиск как на сервере: q — по имени, username и направлению; фильтры — точное совпадение кодов
-export async function searchPeople({ q = '', country, field, status, goal, language, page = 1 }) {
-  await sleep(350);
-  const needle = q.trim().toLowerCase();
-  const found = PEOPLE.filter((p) => {
-    if (needle) {
-      const haystack = `${p.first_name} ${p.last_name} ${p.username} ${p.field} ${p.university}`
-        .toLowerCase()
-        .replace(/_/g, ' ');
-      if (!haystack.includes(needle)) return false;
-    }
-    if (country && p.country !== country) return false;
-    if (field && p.field !== field) return false;
-    if (status && p.status !== status) return false;
-    if (goal && !p.goals.includes(goal)) return false;
-    if (language && !p.languages.includes(language)) return false;
-    return true;
-  });
-  const start = (page - 1) * PAGE_SIZE;
-  return {
-    count: found.length,
-    pageCount: Math.max(1, Math.ceil(found.length / PAGE_SIZE)),
-    results: found.slice(start, start + PAGE_SIZE).map(toCard),
-  };
-}
-
-// Публичный профиль; null — такого username нет (страница «Profile not found»)
-export async function getPublicProfile(username) {
-  await sleep(300);
-  const person = PEOPLE.find((p) => p.username === username);
-  if (!person) return null;
-  return { ...person, ...toCard(person), is_minor: false };
-}
-
 export async function listSavedPeople() {
   await sleep(300);
   return PEOPLE.filter((p) => savedSet.has(p.username)).map(toCard);
-}
-
-// Закладка: PUT/DELETE /api/saved/{username}/ (идемпотентно)
-export async function setSaved(username, saved) {
-  await sleep(150);
-  if (saved) savedSet.add(username);
-  else savedSet.delete(username);
 }

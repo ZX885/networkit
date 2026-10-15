@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { SearchX, SlidersHorizontal } from 'lucide-react';
 import MetaGate from '../components/shared/MetaGate.jsx';
 import PageHeader from '../components/shared/PageHeader.jsx';
@@ -10,13 +10,14 @@ import PeopleGrid from '../features/discover/components/PeopleGrid.jsx';
 import SearchBar from '../features/discover/components/SearchBar.jsx';
 import useDiscoverParams, { FILTER_KEYS } from '../features/discover/hooks/useDiscoverParams.js';
 import usePeople from '../features/discover/hooks/usePeople.js';
+import { apiErrorText } from '../lib/apiErrors.js';
 import { texts } from '../texts/en.js';
 import styles from './DiscoverPage.module.css';
 
 const t = texts.discover;
 const FILTERS_ID = 'discover-filters';
 
-// Discover: поиск и фильтры (в адресе страницы), сетка людей, пагинация. Данные — MOCK (api/mock/people.js);
+// Discover: поиск и фильтры (в адресе страницы), сетка людей, пагинация. Данные — GET /api/profiles/ (api/profiles.js);
 // списки для фильтров и названия на карточках — с сервера (MetaGate).
 export default function DiscoverPage() {
   const { params, update } = useDiscoverParams();
@@ -34,6 +35,12 @@ export default function DiscoverPage() {
   }
 
   const empty = data && data.results.length === 0;
+
+  // Страницы с таким номером нет (например, из старой ссылки): возвращаемся на первую
+  const pageMissing = error?.status === 404 && params.page > 1;
+  useEffect(() => {
+    if (pageMissing) update({ page: 1 }, { replace: true });
+  }, [pageMissing]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <>
@@ -63,9 +70,10 @@ export default function DiscoverPage() {
         <p className={styles.info} role="status" aria-live="polite">
           {loading ? t.loadingList : data && t.found(data.count)}
         </p>
-        {error ? (
+        {error && !pageMissing ? (
           <EmptyState
             title={texts.app.errorTitle}
+            description={apiErrorText(error)}
             action={<Button onClick={retry}>{texts.app.retry}</Button>}
           />
         ) : empty ? (

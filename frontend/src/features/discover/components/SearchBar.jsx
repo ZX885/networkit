@@ -5,6 +5,7 @@ import styles from './SearchBar.module.css';
 
 const t = texts.discover;
 const DEBOUNCE_MS = 320;
+const Q_MAX = 100; // длиннее сервер не принимает (400)
 
 // Строка поиска (legacy .sbar). Значение уходит наверх через 320 мс после последнего символа.
 // value — текущее значение из адреса: если оно изменилось снаружи («Назад»), поле подстраивается.
@@ -36,6 +37,7 @@ export default function SearchBar({ value, onSearch }) {
       <Search size={18} className={styles.icon} aria-hidden="true" />
       <input
         type="search"
+        maxLength={Q_MAX}
         className={styles.input}
         value={draft}
         placeholder={t.searchPlaceholder}

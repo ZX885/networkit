@@ -21,6 +21,12 @@ class UserThrottle(SwitchableMixin, UserRateThrottle):
     scope = "user"
 
 
+class SearchThrottle(SwitchableMixin, UserRateThrottle):
+    """Поиск людей: лимит на пользователя (scope search)."""
+
+    scope = "search"
+
+
 class IpThrottle(SwitchableMixin, SimpleRateThrottle):
     """Лимит по IP-адресу клиента (для входа, регистрации и т.п.)."""
 

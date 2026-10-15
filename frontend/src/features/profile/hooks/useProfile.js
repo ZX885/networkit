@@ -1,27 +1,30 @@
 import { useEffect, useState } from 'react';
-import { getPublicProfile } from '../../../api/mock/people.js';
+import { getProfile } from '../../../api/profiles.js';
 
-// Загружает чужой профиль по username (MOCK, потом GET /api/profiles/{username}/).
-// status: loading | ready | notFound | error. «Загрузка» считается из ключа: ответ другого username не показываем.
+// Загружает чужой профиль по username (GET /api/profiles/{username}/).
+// status: loading | ready | notFound | error. «Загрузка» считается из ключа: ответ другого username
+// не показываем. Устаревший запрос отменяется.
 export default function useProfile(username) {
   const [attempt, setAttempt] = useState(0);
-  const [state, setState] = useState({ key: null, profile: null, error: false });
+  const [state, setState] = useState({ key: null, profile: null, error: null });
   const key = `${username}#${attempt}`;
 
   useEffect(() => {
+    const controller = new AbortController();
     let ignore = false;
-    getPublicProfile(username).then(
-      (profile) => !ignore && setState({ key, profile, error: false }),
-      () => !ignore && setState({ key, profile: null, error: true }),
+    getProfile(username, { signal: controller.signal }).then(
+      (profile) => !ignore && setState({ key, profile, error: null }),
+      (error) => !ignore && setState({ key, profile: null, error }),
     );
     return () => {
       ignore = true;
+      controller.abort();
     };
   }, [key, username]);
 
   const retry = () => setAttempt((n) => n + 1);
-  if (state.key !== key) return { status: 'loading', profile: null, retry };
-  if (state.error) return { status: 'error', profile: null, retry };
-  if (!state.profile) return { status: 'notFound', profile: null, retry };
-  return { status: 'ready', profile: state.profile, retry };
+  if (state.key !== key) return { status: 'loading', profile: null, error: null, retry };
+  if (state.error?.status === 404) return { status: 'notFound', profile: null, error: null, retry };
+  if (state.error) return { status: 'error', profile: null, error: state.error, retry };
+  return { status: 'ready', profile: state.profile, error: null, retry };
 }
