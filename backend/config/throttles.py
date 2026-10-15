@@ -33,6 +33,24 @@ class SavedThrottle(SwitchableMixin, UserRateThrottle):
     scope = "saved"
 
 
+class MessageRequestThrottle(SwitchableMixin, UserRateThrottle):
+    """Новые запросы на переписку: лимит на пользователя (scope message_request)."""
+
+    scope = "message_request"
+
+
+class MessageSendThrottle(SwitchableMixin, UserRateThrottle):
+    """Сообщения в минуту (scope message_send)."""
+
+    scope = "message_send"
+
+
+class MessageSendDayThrottle(SwitchableMixin, UserRateThrottle):
+    """Сообщения в сутки (scope message_send_day)."""
+
+    scope = "message_send_day"
+
+
 class IpThrottle(SwitchableMixin, SimpleRateThrottle):
     """Лимит по IP-адресу клиента (для входа, регистрации и т.п.)."""
 

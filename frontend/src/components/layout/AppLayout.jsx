@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { Menu } from 'lucide-react';
+import SummaryProvider from '../../app/providers/SummaryProvider.jsx';
 import { loadMeta } from '../../api/meta.js';
+import ErrorBoundary from '../shared/ErrorBoundary.jsx';
 import { texts } from '../../texts/en.js';
 import styles from './AppLayout.module.css';
 import Sidebar from './Sidebar.jsx';
@@ -40,23 +42,27 @@ export default function AppLayout({ children }) {
   }, [open, closeMenu]);
 
   return (
-    <div className={styles.layout}>
-      <button
-        ref={buttonRef}
-        type="button"
-        className={styles.menuButton}
-        aria-label={texts.app.nav.openMenu}
-        aria-expanded={open}
-        aria-controls={SIDEBAR_ID}
-        onClick={() => setOpenedAt(pathname)}
-      >
-        <Menu size={20} aria-hidden="true" />
-      </button>
-      {open && <div className={styles.backdrop} onClick={closeMenu} aria-hidden="true" />}
-      <Sidebar id={SIDEBAR_ID} open={open} />
-      <main ref={mainRef} className={styles.main}>
-        {children ?? <Outlet />}
-      </main>
-    </div>
+    <SummaryProvider>
+      <div className={styles.layout}>
+        <button
+          ref={buttonRef}
+          type="button"
+          className={styles.menuButton}
+          aria-label={texts.app.nav.openMenu}
+          aria-expanded={open}
+          aria-controls={SIDEBAR_ID}
+          onClick={() => setOpenedAt(pathname)}
+        >
+          <Menu size={20} aria-hidden="true" />
+        </button>
+        {open && <div className={styles.backdrop} onClick={closeMenu} aria-hidden="true" />}
+        <Sidebar id={SIDEBAR_ID} open={open} />
+        <main ref={mainRef} className={styles.main}>
+          <ErrorBoundary key={pathname} inLayout>
+            {children ?? <Outlet />}
+          </ErrorBoundary>
+        </main>
+      </div>
+    </SummaryProvider>
   );
 }

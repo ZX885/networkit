@@ -14,6 +14,7 @@ export class ApiError extends Error {
     this.fields = error.fields || {}; // { поле: [{ code, message }] }
     this.nonFieldErrors = error.non_field_errors || []; // [{ code, message }]
     this.retryAfter = error.retry_after ?? null; // секунды (код throttled)
+    this.conversationId = error.conversation_id ?? null; // id диалога в 409 по запросам на переписку
   }
 }
 

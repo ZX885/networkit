@@ -78,6 +78,7 @@ INSTALLED_APPS = [
     "rest_framework",
     "apps.users",
     "apps.profiles",
+    "apps.messaging",
 ]
 
 # Своя модель пользователя (вход по email). Должна быть задана до первой миграции.
@@ -91,6 +92,13 @@ MAX_AGE = 100
 
 # Сколько профилей человек может сохранить в избранное (отдаётся клиенту в /api/meta/ limits.saved_max)
 SAVED_MAX = 200
+
+# Личные сообщения: длина текста, число одновременно висящих исходящих запросов
+# (pending и недавно отклонённые: отказ инициатору не раскрывается), срок «недавно» в днях
+MESSAGE_MAX = 4000
+REQUEST_MAX = 500  # первое сообщение вместе с запросом на переписку
+PENDING_REQUESTS_MAX = 20
+DECLINED_COUNTS_DAYS = 7
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -189,6 +197,9 @@ THROTTLE_RATES = {
     "username_check": "30/min",
     "search": "60/min",  # GET /api/profiles/ на пользователя
     "saved": "60/min",  # PUT/DELETE /api/saved/{username}/ на пользователя
+    "message_request": "10/day",  # новые запросы на переписку
+    "message_send": "30/min",  # сообщения в диалогах
+    "message_send_day": "500/day",
 }
 # Выключатель лимитов (в тестах выключены, отдельные тесты включают)
 THROTTLING_ENABLED = env.bool("THROTTLING_ENABLED", default=not TESTING)

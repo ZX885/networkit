@@ -50,7 +50,7 @@ export default function FilterPanel({ id, open, params, onChange, onClear }) {
       className={[styles.panel, open && styles.open].filter(Boolean).join(' ')}
     >
       {SHOW_COUNTRY_FILTER && select('country', t.country, t.allCountries, meta.countries)}
-      {select('city', t.city, t.allCities, meta.cities)}
+      {meta.cities.length > 0 && select('city', t.city, t.allCities, meta.cities)}
       {select('field', t.field, t.allFields, meta.fields)}
       {select('status', t.status, t.allStatuses, meta.statuses)}
       {select('goal', t.goal, t.anyGoal, meta.goals)}

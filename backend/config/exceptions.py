@@ -23,7 +23,12 @@ logger = logging.getLogger(__name__)
 
 
 class _ApiError(exceptions.APIException):
-    """Базовый класс: status_code, default_code и default_detail задаются в наследнике."""
+    """Базовый класс: status_code, default_code и default_detail задаются в наследнике.
+    extra — дополнительные поля тела ошибки (например, conversation_id)."""
+
+    def __init__(self, detail=None, code=None, extra=None):
+        super().__init__(detail, code)
+        self.extra = extra or {}
 
 
 class InvalidCredentials(_ApiError):
@@ -42,6 +47,48 @@ class SavedLimitReached(_ApiError):
     status_code = status.HTTP_409_CONFLICT
     default_code = "saved_limit_reached"
     default_detail = "You have reached the limit of saved profiles."
+
+
+class ConversationExists(_ApiError):
+    status_code = status.HTTP_409_CONFLICT
+    default_code = "conversation_exists"
+    default_detail = "You already have a conversation with this person."
+
+
+class RequestPending(_ApiError):
+    status_code = status.HTTP_409_CONFLICT
+    default_code = "request_pending"
+    default_detail = "Your message request is waiting for a reply."
+
+
+class IncomingRequestExists(_ApiError):
+    status_code = status.HTTP_409_CONFLICT
+    default_code = "incoming_request_exists"
+    default_detail = "This person has already sent you a message request. Accept it to start chatting."
+
+
+class InvalidState(_ApiError):
+    status_code = status.HTTP_409_CONFLICT
+    default_code = "invalid_state"
+    default_detail = "This action is not available now."
+
+
+class PendingRequestsLimit(_ApiError):
+    status_code = status.HTTP_409_CONFLICT
+    default_code = "pending_requests_limit_reached"
+    default_detail = "You have too many message requests waiting for a reply."
+
+
+class AcceptRequired(_ApiError):
+    status_code = status.HTTP_403_FORBIDDEN
+    default_code = "accept_required"
+    default_detail = "Accept the message request first."
+
+
+class ConversationClosed(_ApiError):
+    status_code = status.HTTP_403_FORBIDDEN
+    default_code = "conversation_closed"
+    default_detail = "You can't send messages to this user."
 
 
 class InvalidToken(_ApiError):
@@ -114,6 +161,24 @@ def _collect(detail, path, fields, non_field):
         non_field.append(_entry(detail))
 
 
+# Сообщения людей нельзя выводить в логи: ошибки БД содержат строку целиком («Failing row contains …»),
+# а у исключений из текста сообщения бывает текст в самом сообщении об ошибке.
+PRIVATE_PATH_PREFIXES = ("/api/conversations/",)
+
+
+class RedactedError(Exception):
+    """Замена исходной ошибки в логе: тип и место в коде (трейсбек) остаются, текст ошибки скрыт."""
+
+
+def _log_exc_info(exc, path):
+    if not path.startswith(PRIVATE_PATH_PREFIXES):
+        return exc
+    safe = RedactedError(f"{type(exc).__module__}.{type(exc).__qualname__} (details hidden)")
+    safe.__cause__ = None  # цепочка «caused by» тоже содержит исходный текст
+    safe.__suppress_context__ = True
+    return (RedactedError, safe, exc.__traceback__)
+
+
 def error_body(code, message, **extra):
     return {"error": {"code": code, "message": message, **extra}}
 
@@ -131,7 +196,7 @@ def exception_handler(exc, context):
             "Unhandled exception in API view: %s %s",
             getattr(request, "method", "?"),
             getattr(request, "path", "?"),
-            exc_info=exc,
+            exc_info=_log_exc_info(exc, getattr(request, "path", "")),
         )
         return Response(
             error_body("server_error", "Something went wrong."),
@@ -175,7 +240,8 @@ def exception_handler(exc, context):
 
     # Остальные: код и текст берём из самого исключения (permission_denied, not_found, свои…)
     code = normalize_code(exc.get_codes() if isinstance(exc.get_codes(), str) else exc.default_code)
-    return Response(error_body(code, str(exc.detail)), status=exc.status_code)
+    extra = getattr(exc, "extra", {})
+    return Response(error_body(code, str(exc.detail), **extra), status=exc.status_code)
 
 
 # ── JSON-ответы для /api/ вместо HTML-страниц Django (404 и 500) ──

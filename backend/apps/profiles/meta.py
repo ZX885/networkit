@@ -30,6 +30,8 @@ def build_meta():
             "languages_max": LANGUAGES_MAX,
             "goals_max": GOALS_MAX,
             "saved_max": settings.SAVED_MAX,
+            "message_max": settings.MESSAGE_MAX,
+            "request_max": settings.REQUEST_MAX,
         },
     }
 
