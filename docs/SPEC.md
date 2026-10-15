@@ -321,14 +321,26 @@ UniqueConstraint(reporter, target) при `status=open` (нельзя спами
 Формат **Card** (поиск, избранное):
 ```json
 {
-  "username": "janedoe", "first_name": "Jane", "last_name": "Doe", "avatar_url": "/media/avatars/3f2a....webp",
-  "field": "computer_science", "field_label": "Computer Science", "status": "student",
-  "city": "Tashkent", "country": "UZ", "bio": "Building things.", "interests": ["ai", "design"],
+  "username": "janedoe", "first_name": "Jane", "last_name": "Doe", "avatar_url": null,
+  "field": "computer_science", "field_label": "Computer Science",
+  "status": "student", "status_label": "Student",
+  "city": "Tashkent", "country": "UZ", "country_label": "Uzbekistan",
+  "bio": "Building things.", "interests": ["ai", "design"],
   "is_saved": false
 }
 ```
-**GET `/api/profiles/`** — пользователь. Параметры: `q` (≤100), `country`, `field`, `status`, `goal`, `language`, `page`, `page_size`. Фильтры — точное совпадение по кодам (`django-filter`). Сортировка — новые первыми (`-created_at`, затем `-id`). Правила видимости — §6.3. → пагинированный список Card.
-**GET `/api/profiles/{username}/`** — пользователь. Формат **Public** (§6.1) + `is_saved`, `blocked_by_me`, `conversation: {"id", "status"} | null`. 404, если профиль не существует / забанен / не подтверждён / между вами есть блокировка в любую сторону. Профиль со `show_in_search=false` открывается по прямой ссылке (как в legacy).
+`city`, `country`, `country_label` равны `null`, если у человека `show_location=false`. `school` в Card не передаётся. Всё, что показывается о человеке, решает `apps/profiles/visibility.py` (`ProfileVisibility`): правило меняется в одном месте.
+
+**GET `/api/profiles/`** — пользователь. Параметры: `q` (≤100, иначе 400 `too_long`), `country`, `field`, `status`, `goal`, `language`, `page`, `page_size`.
+- Фильтры — точное совпадение по кодам; неизвестный код → 400 `invalid_choice`. Пустое значение игнорируется. Реализовано без `django-filter` (`apps/profiles/search.py`).
+- `q` разбивается на слова (до 8), каждое должно совпасть (AND) хотя бы с одним из: `first_name`, `last_name`, `username` (подстрока, без учёта регистра), название направления (поиск идёт по **меткам справочника**: слово ищется в метках, найденные коды сравниваются с `field`; частичное слово подходит: «comput» → Computer Science), `university` (только `show_university=true`), `city`/`region` (только `show_location=true`). Символы `%` и `_` ищутся как обычные.
+- `country` применяется только к профилям с `show_location=true`.
+- Исключаются: сам пользователь, забаненные, неактивные, неподтверждённые, `show_in_search=false`.
+- `page_size`: по умолчанию 12; больше 24 **обрезается до 24** (без ошибки); `0` и нечисловое значение — 12. Страница за пределами — 404 `not_found`.
+- Сортировка — новые первыми (`-created_at`, затем `-id`). Throttle `search`: 60/min на пользователя.
+- → пагинированный список Card.
+
+**GET `/api/profiles/{username}/`** — пользователь. Формат **Public** (§6.1): Card + `region`, `school`, `university`, `year_level`, `languages`, `goals`, `contacts`, `joined` (`"2026-09"`). Скрытое поле — `null`, а не пропуск (`contacts` — объект из пяти ключей либо `null`). 404, если профиля нет / он забанен / неактивен / не подтвердил почту. Профиль со `show_in_search=false` и свой собственный открываются по прямой ссылке (как в legacy). Поля `blocked_by_me` и `conversation` появятся вместе с блокировками и диалогами (B6, B9); `is_saved` пока всегда `false`.
 **GET `/api/saved/`** — пользователь → пагинированные Card (`is_saved=true`); исчезнувшие/забаненные/заблокированные скрываются.
 **PUT `/api/saved/{username}/`** → `204` (идемпотентно); на себя — 400 `cannot_target_self`; цель не найдена/недоступна — 404. **DELETE** → `204` (идемпотентно).
 
@@ -461,6 +473,8 @@ PUT/DELETE избранного и блокировок идемпотентны
 | university | ✅ | если `show_university` | ❌ | ❌ |
 | contacts | ✅ | если `show_contacts` **и** пользователю ≥18 | ❌ | ❌ |
 | created_at → `joined` (месяц-год) | ✅ | если `show_join_date` | ❌ | ❌ |
+
+**Отступление для несовершеннолетних (младше 18): `school` не отдаётся ни в Card, ни в Public.** В Public поле приходит как `null` (в Card его нет вообще). В таблице выше `school` публичен, но школа несовершеннолетнего вместе с именем и городом позволяет найти его в реальной жизни, поэтому показ закрыт независимо от настроек. Решение принимает `ProfileVisibility.school()`; там же будет меняться правило показа имени несовершеннолетних (сейчас — полное имя, см. вопросы по безопасности).
 
 Скрытое поле возвращается как `null` (или `contacts: null`), а не опускается и не заменяется пустой строкой — клиент не может отличить «скрыто» от «пусто».
 Для 16–17: `contacts` в Public всегда `null`, `show_contacts` принудительно `false`. При наступлении 18 лет флаг **остаётся `false`** — открыть контакты может только сам пользователь.

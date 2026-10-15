@@ -364,7 +364,7 @@ export const texts = {
     saved: 'Saved',
   },
 
-  // Discover (MOCK-данные, см. api/mock/people.js)
+  // Discover (данные — GET /api/profiles/)
   discover: {
     title: 'Discover people',
     searchLabel: 'Search people',

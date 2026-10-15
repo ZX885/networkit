@@ -33,9 +33,9 @@ Python 3.14, Pipenv, Node.js 20+, PostgreSQL 17.
    `createcachetable` создаёт таблицу `django_cache`: в ней хранятся счётчики лимитов запросов (вход, регистрация). Без неё запросы к API вернут ошибку 500. Эту команду нужно выполнить и на боевом сервере.
 5. **Запуск:**
    ```bash
-   python manage.py runserver
+   python manage.py runserver 8100
    ```
-   Сервер: http://127.0.0.1:8000. Если `.env` отсутствует или PostgreSQL недоступен, команда остановится с объяснением.
+   Сервер: http://127.0.0.1:8100 (порт 8100 — по умолчанию для NetworkIt, чтобы не конфликтовать с другими проектами на 8000). Если `.env` отсутствует или PostgreSQL недоступен, команда остановится с объяснением.
 
 Настройки: `config/settings/dev.py` (по умолчанию для `manage.py`) и `config/settings/prod.py` (по умолчанию для wsgi/asgi; в нём `DEBUG=False`, а `ALLOWED_HOSTS` и `SITE_URL` обязательны).
 
@@ -85,6 +85,20 @@ curl -s -b $JAR -c $JAR -X POST -H "$H_ORIGIN" -H "X-CSRFToken: $TOKEN" $BASE/ap
 
 После проверки тестовый аккаунт можно удалить: `python manage.py shell -c "from apps.users.models import User; User.objects.filter(email='me@example.com').delete()"` (профиль удалится вместе с ним).
 
+### Демо-профили для поиска (seed)
+
+Для ручной проверки поиска и страницы профиля можно создать вымышленных пользователей:
+
+```bash
+cd backend
+python manage.py seed_demo_profiles --count 20      # создаёт демо-профили (почта demo-N@example.invalid)
+python manage.py seed_demo_profiles --delete        # удаляет только созданных этой командой
+```
+
+Пользователи подтверждены, пароль у них не задан (войти под ними нельзя): смотреть их можно под своим аккаунтом. У части скрыты город, вуз и участие в поиске, часть младше 18 лет (без контактов). Повторный запуск добавляет новых, нумерация продолжается.
+
+**На сервере (Railway):** при `DEBUG=False` команда без флага не запускается. Запускайте её там только для демонстрации с флагом `--i-know-this-is-a-demo` (`python backend/manage.py seed_demo_profiles --count 20 --i-know-this-is-a-demo`), а после показа обязательно удалите демо-данные: `python backend/manage.py seed_demo_profiles --delete --i-know-this-is-a-demo`.
+
 ## Frontend
 
 ```bash
@@ -93,7 +107,7 @@ npm install
 npm run dev
 ```
 
-Сайт: http://localhost:5173. Запросы `/api/...` Vite передаёт на Django (`http://127.0.0.1:8000`), поэтому backend должен быть запущен.
+Сайт: http://localhost:5173. Запросы `/api/...` Vite передаёт на Django (`http://127.0.0.1:8100`; другой адрес — переменная `DEV_API_TARGET` в `frontend/.env.development`, пример в `frontend/.env.development.example`), поэтому backend должен быть запущен.
 
 ## Проверка
 
@@ -101,7 +115,7 @@ npm run dev
 cd backend
 python manage.py check          # конфигурация и подключение к БД
 python manage.py test           # тесты (создаётся временная база test_<имя>)
-curl http://127.0.0.1:8000/api/health/       # {"status": "ok"}  (при запущенном runserver)
+curl http://127.0.0.1:8100/api/health/       # {"status": "ok"}  (при запущенном runserver)
 curl http://localhost:5173/api/health/       # то же через прокси Vite (при запущенных обоих серверах)
 ```
 

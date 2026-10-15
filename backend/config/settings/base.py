@@ -184,6 +184,7 @@ THROTTLE_RATES = {
     "login_hour": "30/hour",
     "register": "5/hour",  # регистрация и повторная отправка письма
     "username_check": "30/min",
+    "search": "60/min",  # GET /api/profiles/ на пользователя
 }
 # Выключатель лимитов (в тестах выключены, отдельные тесты включают)
 THROTTLING_ENABLED = env.bool("THROTTLING_ENABLED", default=not TESTING)

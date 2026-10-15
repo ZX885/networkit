@@ -2,11 +2,23 @@ from rest_framework import status
 from rest_framework.exceptions import ErrorDetail, NotFound, ValidationError
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
+from rest_framework.generics import ListAPIView
 from rest_framework.views import APIView
+
+from config.pagination import StandardPagination
+from config.throttles import BASE_THROTTLES, SearchThrottle
 
 from .meta import build_meta, meta_etag
 from .models import Profile
-from .serializers import MeUpdateSerializer, OwnProfileSerializer, PrivacySerializer, privacy_of
+from .search import search_profiles, visible_profiles
+from .serializers import (
+    CardSerializer,
+    MeUpdateSerializer,
+    OwnProfileSerializer,
+    PrivacySerializer,
+    PublicProfileSerializer,
+    privacy_of,
+)
 
 # Поля, которые нельзя менять через PATCH /api/me/ (docs/SPEC.md §3.5)
 READ_ONLY_FIELDS = (
@@ -88,3 +100,26 @@ class PrivacyView(MeView):
         serializer.is_valid(raise_exception=True)
         profile = serializer.save()
         return Response(privacy_of(profile))
+
+
+class ProfileListView(ListAPIView):
+    """GET /api/profiles/ — поиск людей (docs/SPEC.md §3.6). Параметры: q, country, field, status,
+    goal, language, page, page_size. page_size больше 24 обрезается до 24."""
+
+    serializer_class = CardSerializer
+    pagination_class = StandardPagination
+    throttle_classes = [*BASE_THROTTLES, SearchThrottle]
+
+    def get_queryset(self):
+        return search_profiles(self.request.user, self.request.query_params)
+
+
+class ProfileDetailView(APIView):
+    """GET /api/profiles/{username}/ — публичный профиль. 404, если человека нет, он забанен или не
+    подтвердил почту. Профиль со show_in_search=False и свой собственный открываются."""
+
+    def get(self, request, username):
+        profile = visible_profiles().filter(username=username.lower()).first()
+        if profile is None:
+            raise NotFound()
+        return Response(PublicProfileSerializer(profile).data)

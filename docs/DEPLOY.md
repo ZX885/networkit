@@ -156,7 +156,7 @@ SMTP не настроен, поэтому при `DEMO_LOG_VERIFY_LINKS=True` �
 - **Репозиторий приватный**, секреты (`SECRET_KEY`, пароли) живут только в Variables Railway.
 - **`DEMO_LOG_VERIFY_LINKS` — только демо** (раздел 5).
 - Gunicorn не запускается на Windows: локально проверяйте `python manage.py check`, `check --deploy` и `collectstatic`, а запуск — на Railway.
-- Разработка локально не меняется: `manage.py` по-прежнему использует dev-настройки и ваш `backend/.env`.
+- Разработка локально не меняется: `manage.py` по-прежнему использует dev-настройки и ваш `backend/.env`. Локальный запуск backend: `python manage.py runserver 8100` (frontend проксирует `/api` на `http://127.0.0.1:8100`, адрес можно сменить через `DEV_API_TARGET`, см. `frontend/.env.development.example`).
 
 ### Про `check --deploy`
 

@@ -13,7 +13,7 @@ import styles from './ProfilePage.module.css';
 
 const t = texts.profile;
 
-// Чужой профиль /u/:username (MOCK: api/mock/people.js). Неизвестный username → «Profile not found».
+// Чужой профиль /u/:username (GET /api/profiles/{username}/). Нет такого человека → «Profile not found».
 export default function ProfilePage() {
   const { username } = useParams();
   const { status, profile, retry } = useProfile(username);
@@ -49,7 +49,7 @@ export default function ProfilePage() {
       <div className={styles.bar}>
         <BackLink to="/discover" />
         <div className={styles.actions}>
-          <ProfileActions key={profile.username} profile={profile} />
+          <ProfileActions />
         </div>
       </div>
       <MetaGate>

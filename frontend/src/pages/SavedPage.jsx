@@ -11,7 +11,7 @@ import { texts } from '../texts/en.js';
 
 const t = texts.saved;
 
-// Избранное (MOCK: api/mock/people.js → GET /api/saved/). Карточки те же, что в Discover.
+// Избранное (MOCK: api/mock/people.js, потом GET /api/saved/). Карточки те же, что в Discover.
 export default function SavedPage() {
   const [attempt, setAttempt] = useState(0);
   const [state, setState] = useState({ attempt: null, people: null, error: false });
