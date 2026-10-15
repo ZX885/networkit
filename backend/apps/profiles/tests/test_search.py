@@ -372,3 +372,88 @@ class MinorsInSearchTests(SearchTestCase):
         self.assertEqual(card["username"], "teen_one")
         self.assertNotIn("school", card)
         self.assertNotIn("Secret High School", raw)
+
+
+class SearchCityFilterTests(SearchTestCase):
+    """Фильтр city: сравнение с названием из справочника через Lower(Trim(city)), только show_location=True."""
+
+    def test_case_and_edge_spaces_do_not_matter(self):
+        for i, text in enumerate(["samarkand", "Samarkand ", "SAMARKAND", " Samarkand", "Samarkand"]):
+            person(username=f"sam_{i}", city=text)
+        person(username="tash_one", city="Tashkent")
+
+        found = self.usernames(city="samarkand", page_size=24)
+
+        self.assertEqual(set(found), {f"sam_{i}" for i in range(5)})
+
+    def test_hidden_location_is_not_found(self):
+        person(username="shown_one", city="Samarkand", show_location=True)
+        person(username="hidden_one", city="Samarkand", show_location=False)
+
+        self.assertEqual(self.usernames(city="samarkand"), ["shown_one"])
+
+    def test_unknown_city_code_is_rejected(self):
+        for bad in ("atlantis", "Samarkand", "SAMARKAND ", "other", "%", "'; DROP TABLE x; --"):
+            with self.subTest(bad):
+                response = self.search(city=bad)
+                self.assertEqual(response.status_code, 400)
+                self.assertEqual(field_codes(response, "city"), ["invalid_choice"])
+
+    def test_empty_city_is_ignored(self):
+        person(username="anybody")
+
+        self.assertEqual(self.usernames(city=""), ["anybody"])
+
+    def test_profiles_with_another_city_text_are_not_found_by_the_filter(self):
+        person(username="other_city", city="Zomin")  # «Other»: города нет в справочнике
+        person(username="in_list", city="Samarkand")
+
+        self.assertEqual(self.usernames(city="samarkand"), ["in_list"])
+        self.assertEqual(self.usernames(q="Zomin"), ["other_city"])  # зато находится текстовым поиском
+
+    def test_city_combines_with_other_filters(self):
+        person(
+            username="match_all",
+            city="Samarkand",
+            country="UZ",
+            field="design",
+            status="student",
+            goals=["mentorship"],
+            languages=["uzbek"],
+        )
+        person(username="wrong_field", city="Samarkand", country="UZ", field="law", status="student",
+               goals=["mentorship"], languages=["uzbek"])
+        person(username="wrong_city", city="Bukhara", country="UZ", field="design", status="student",
+               goals=["mentorship"], languages=["uzbek"])
+
+        self.assertEqual(
+            self.usernames(city="samarkand", field="design", status="student", goal="mentorship", language="uzbek"),
+            ["match_all"],
+        )
+        self.assertEqual(self.usernames(city="samarkand", country="UZ", q="match"), ["match_all"])
+        self.assertEqual(set(self.usernames(city="samarkand")), {"match_all", "wrong_field"})
+
+    def test_country_filter_still_works(self):
+        person(username="uz_one", country="UZ", city="Tashkent")
+        person(username="de_one", country="DE", city="Berlin")
+
+        self.assertEqual(self.usernames(country="UZ"), ["uz_one"])
+
+    def test_special_characters_in_stored_city_do_not_act_as_patterns(self):
+        person(username="percent_city", city="Samar%and")
+        person(username="underscore_city", city="Samar_and")
+        person(username="real_city", city="Samarkand")
+
+        self.assertEqual(self.usernames(city="samarkand"), ["real_city"])
+        for nasty in ("%", "_", "\\", "'"):
+            with self.subTest(nasty):
+                self.assertEqual(self.search(q=nasty, city="samarkand").status_code, 200)
+
+    def test_minors_follow_the_same_rules(self):
+        person(username="teen_sam", city="Samarkand", date_of_birth=birth_date_for_age(16))
+        person(username="teen_hidden", city="Samarkand", date_of_birth=birth_date_for_age(16), show_location=False)
+
+        card = self.search(city="samarkand").json()["results"][0]
+
+        self.assertEqual(card["username"], "teen_sam")
+        self.assertNotIn("school", card)

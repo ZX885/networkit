@@ -19,6 +19,8 @@ def build_meta():
         "interests": choices.as_options(choices.INTERESTS),
         "languages": choices.as_options(choices.LANGUAGES),
         "goals": choices.as_options(choices.GOALS),
+        "cities": choices.as_options(choices.UZ_CITIES),  # города страны country_cities_default
+        "country_cities_default": choices.COUNTRY_CITIES_DEFAULT,
         "report_reasons": [],  # жалобы появятся позже (шаг про Report)
         "limits": {
             "bio_max": BIO_MAX,

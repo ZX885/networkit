@@ -245,11 +245,13 @@ UniqueConstraint(reporter, target) при `status=open` (нельзя спами
   "interests": [{"code": "ai", "label": "Artificial Intelligence"}],
   "languages": [{"code": "uzbek", "label": "Uzbek"}],
   "goals": [{"code": "study_partners", "label": "Study partners"}],
+  "cities": [{"code": "tashkent", "label": "Tashkent"}, {"code": "samarkand", "label": "Samarkand"}],
+  "country_cities_default": "UZ",
   "report_reasons": [],
   "limits": {"bio_max": 300, "min_age": 13, "adult_age": 18, "interests_max": 10, "languages_max": 10, "goals_max": 8, "saved_max": 200}
 }
 ```
-Ответ публичный и кэшируемый (`Cache-Control: public, max-age=3600`, `ETag`, на `If-None-Match` — `304`). `report_reasons` пока пустой (жалобы появятся позже); остальные лимиты (`message_max`, `avatar_max_mb` и др.) добавятся вместе с соответствующими функциями.
+`cities` — справочник городов Узбекистана (24 города, `profiles/choices.py: UZ_CITIES`; код — название в нижнем регистре, метка — английское название), `country_cities_default` — страна, для которой клиент показывает этот список. «Other» в справочник не входит (это вариант интерфейса: свободный текст). Ответ публичный и кэшируемый (`Cache-Control: public, max-age=3600`, `ETag`, на `If-None-Match` — `304`). `report_reasons` пока пустой (жалобы появятся позже); остальные лимиты (`message_max`, `avatar_max_mb` и др.) добавятся вместе с соответствующими функциями.
 `GET /api/stats/` → `{"members": 120, "fields": 14, "countries": 6}` (считаются только подтверждённые, не забаненные профили; клиент округляет для показа, как в legacy `updateHeroStats`).
 
 ### 3.2 Регистрация и подтверждение почты
@@ -332,10 +334,11 @@ UniqueConstraint(reporter, target) при `status=open` (нельзя спами
 ```
 `city`, `country`, `country_label` равны `null`, если у человека `show_location=false`. `school` в Card не передаётся. Всё, что показывается о человеке, решает `apps/profiles/visibility.py` (`ProfileVisibility`): правило меняется в одном месте.
 
-**GET `/api/profiles/`** — пользователь. Параметры: `q` (≤100, иначе 400 `too_long`), `country`, `field`, `status`, `goal`, `language`, `page`, `page_size`.
+**GET `/api/profiles/`** — пользователь. Параметры: `q` (≤100, иначе 400 `too_long`), `country`, `city`, `field`, `status`, `goal`, `language`, `page`, `page_size`.
 - Фильтры — точное совпадение по кодам; неизвестный код → 400 `invalid_choice`. Пустое значение игнорируется. Реализовано без `django-filter` (`apps/profiles/search.py`).
 - `q` разбивается на слова (до 8), каждое должно совпасть (AND) хотя бы с одним из: `first_name`, `last_name`, `username` (подстрока, без учёта регистра), название направления (поиск идёт по **меткам справочника**: слово ищется в метках, найденные коды сравниваются с `field`; частичное слово подходит: «comput» → Computer Science), `university` (только `show_university=true`), `city`/`region` (только `show_location=true`). Символы `%` и `_` ищутся как обычные.
-- `country` применяется только к профилям с `show_location=true`.
+- `country` применяется только к профилям с `show_location=true` (в интерфейсе фильтр стран пока скрыт флагом, API его поддерживает).
+- `city` — код города из `cities` (неизвестный код → 400 `invalid_choice`). Город профиля (свободный текст `Profile.city`) сравнивается с **названием города из справочника** через `Lower(Trim(city))`: регистр и пробелы по краям не важны («samarkand», «Samarkand », «SAMARKAND» находятся одним фильтром). Только среди `show_location=true`. **Профили с городом «Other»** (любой город вне справочника) фильтром `city` **не находятся**: их можно найти только текстовым поиском `q` (по `city`/`region`, тоже только при `show_location=true`). Синонимы и альтернативные написания («Toshkent») не поддерживаются.
 - Исключаются: сам пользователь, забаненные, неактивные, неподтверждённые, `show_in_search=false`.
 - `page_size`: по умолчанию 12; больше 24 **обрезается до 24** (без ошибки); `0` и нечисловое значение — 12. Страница за пределами — 404 `not_found`.
 - Сортировка — новые первыми (`-created_at`, затем `-id`). Throttle `search`: 60/min на пользователя.

@@ -5,6 +5,7 @@
 """
 
 from django.db.models import Q
+from django.db.models.functions import Lower, Trim
 from rest_framework.exceptions import ErrorDetail, ValidationError
 
 from . import choices
@@ -16,6 +17,7 @@ MAX_TOKENS = 8  # слов в запросе: остальные игнорир�
 # Параметр фильтра → допустимые коды
 FILTER_CHOICES = {
     "country": choices.COUNTRIES,
+    "city": choices.UZ_CITIES,
     "field": choices.FIELDS,
     "status": choices.STATUSES,
     "goal": choices.GOALS,
@@ -80,6 +82,14 @@ def search_profiles(user, params):
         queryset = queryset.filter(token_query(token))
     if cleaned["country"]:
         queryset = queryset.filter(show_location=True, country=cleaned["country"])
+    if cleaned["city"]:
+        # Город сравнивается с НАЗВАНИЕМ из справочника без учёта регистра и без пробелов по краям
+        # (Lower(Trim(city))) и только среди show_location=True. Профили, у которых город «Other»
+        # (любой город вне справочника), этим фильтром НЕ находятся — только текстовым поиском q.
+        label = choices.label_of(choices.UZ_CITIES, cleaned["city"]).lower()
+        queryset = queryset.annotate(city_normalized=Lower(Trim("city"))).filter(
+            show_location=True, city_normalized=label
+        )
     if cleaned["field"]:
         queryset = queryset.filter(field=cleaned["field"])
     if cleaned["status"]:

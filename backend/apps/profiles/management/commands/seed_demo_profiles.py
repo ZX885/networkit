@@ -36,9 +36,8 @@ LAST_NAMES = [
     "Ferreira", "Tursunova", "Okafor", "Yilmaz", "Petrov", "Yusupova", "Garcia", "Nurlan", "Smith",
     "Abdullaeva", "Kim", "Sato", "Novak", "Ismailov", "Rossi", "Khan", "Dubois", "Olsen", "Lopez",
 ]
-# Страна → города (демо в основном про Узбекистан и соседей)
+# Другие страны → города (Узбекистан берёт города из apps/profiles/choices.py)
 CITIES = {
-    "UZ": ["Tashkent", "Samarkand", "Bukhara", "Namangan", "Andijan"],
     "KZ": ["Almaty", "Astana"],
     "KG": ["Bishkek", "Osh"],
     "TR": ["Istanbul", "Ankara"],
@@ -47,7 +46,9 @@ CITIES = {
     "BR": ["Sao Paulo", "Rio de Janeiro"],
     "IN": ["Delhi", "Mumbai"],
 }
-COUNTRY_WEIGHTS = ["UZ"] * 5 + ["KZ", "KG", "TR", "DE", "FR", "BR", "IN"]
+OTHER_COUNTRIES = ["KZ", "KG", "TR", "DE", "FR", "BR", "IN"]
+# Города Узбекистана вне справочника (в форме это вариант «Other»)
+UZ_OTHER_CITIES = ["Zomin", "Chust", "Kitab", "Yangiyer"]
 UNIVERSITIES = ["WIUT", "TSUL", "SamSU", "AUCA", "Nazarbayev University", "TU Berlin", "METU"]
 SCHOOLS = ["Lyceum 5", "School 110", "Presidential School", "IT Lyceum", "Gymnasium 3"]
 YEAR_LEVELS_STUDENT = ["1st year", "2nd year", "3rd year", "4th year", "Master 1st year"]
@@ -122,7 +123,16 @@ class Command(BaseCommand):
         birth = today - timedelta(days=age * 365 + rng.randint(0, 364))
         if calculate_age(birth, today) != age:  # день рождения мог «сдвинуться» из-за високосных лет
             birth = today - timedelta(days=age * 366 + 1)
-        country = rng.choice(COUNTRY_WEIGHTS)
+        # Место: 70% — города Узбекистана из справочника, 10% — другой город Узбекистана («Other»),
+        # 20% — другие страны (так фильтр по городу есть на чём показать)
+        slot = n % 10
+        if slot <= 6:
+            country, city = "UZ", rng.choice(choices.UZ_CITIES)[1]
+        elif slot == 7:
+            country, city = "UZ", rng.choice(UZ_OTHER_CITIES)
+        else:
+            country = rng.choice(OTHER_COUNTRIES)
+            city = rng.choice(CITIES[country])
         is_student = is_minor or rng.random() < 0.6
         field = rng.choice(choices.FIELDS)
         adult_with_contacts = (not is_minor) and rng.random() < 0.5
@@ -138,7 +148,7 @@ class Command(BaseCommand):
             date_of_birth=birth,
             gender=rng.choice(["male", "female", "non_binary", "undisclosed", ""]),
             country=country,
-            city=rng.choice(CITIES[country]),
+            city=city,
             status="student" if is_student else "professional",
             school=rng.choice(SCHOOLS) if is_minor else "",
             university=rng.choice(UNIVERSITIES) if (is_student and not is_minor and rng.random() < 0.8) else "",
