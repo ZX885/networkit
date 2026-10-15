@@ -235,15 +235,22 @@ class MeUpdateSerializer(ProfileFieldsSerializer):
         return profile
 
 
+def is_saved_in_context(profile, context):
+    """Сохранил ли профиль тот, кто смотрит. Данные приходят из контекста (их собирает view одним
+    запросом на страницу), поэтому здесь запросов в базу нет: all_saved — весь список «Избранное»,
+    saved_ids — id пользователей, сохранённых из этой страницы."""
+    return bool(context.get("all_saved")) or profile.user_id in context.get("saved_ids", ())
+
+
 class CardSerializer(serializers.BaseSerializer):
-    """Card (поиск): все решения о показе полей — в ProfileVisibility."""
+    """Card (поиск, избранное): все решения о показе полей — в ProfileVisibility."""
 
     def to_representation(self, profile):
-        return ProfileVisibility(profile).card()
+        return ProfileVisibility(profile, is_saved_in_context(profile, self.context)).card()
 
 
 class PublicProfileSerializer(serializers.BaseSerializer):
     """Public (страница профиля): скрытое поле — null, а не пропуск."""
 
     def to_representation(self, profile):
-        return ProfileVisibility(profile).public()
+        return ProfileVisibility(profile, is_saved_in_context(profile, self.context)).public()

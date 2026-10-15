@@ -1,26 +1,19 @@
-import { Bookmark, MessageCircle } from 'lucide-react';
+import { Bookmark } from 'lucide-react';
 import Button from '../../../components/ui/Button.jsx';
-import useToast from '../../../components/ui/useToast.js';
+import useSavedToggle from '../../../components/shared/useSavedToggle.js';
 import { texts } from '../../../texts/en.js';
 
 const t = texts.profile;
 
-// Кнопки на чужом профиле: «Send message» и «Save». Пока без функции: тост «Coming soon»
-// (сообщения подключим в B6/B7, избранное — в B9).
-export default function ProfileActions() {
-  const showToast = useToast();
-  const comingSoon = () => showToast(texts.app.comingSoon);
+// Кнопка «Save» на чужом профиле: реальная закладка (aria-pressed), состояние меняется сразу
+// и откатывается при ошибке (в том числе при лимите закладок).
+export default function ProfileActions({ profile }) {
+  const { saved, busy, toggle } = useSavedToggle(profile.username, profile.is_saved);
 
   return (
-    <>
-      <Button size="sm" onClick={comingSoon}>
-        <MessageCircle size={14} aria-hidden="true" />
-        {t.sendMessage}
-      </Button>
-      <Button variant="ghost" size="sm" onClick={comingSoon}>
-        <Bookmark size={14} aria-hidden="true" />
-        {t.save}
-      </Button>
-    </>
+    <Button variant="ghost" size="sm" aria-pressed={saved} loading={busy} onClick={toggle}>
+      <Bookmark size={14} fill={saved ? 'currentColor' : 'none'} aria-hidden="true" />
+      {saved ? t.saved : t.save}
+    </Button>
   );
 }

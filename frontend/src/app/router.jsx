@@ -6,9 +6,7 @@ import GuestRoute from './routes/GuestRoute.jsx';
 import NotFoundRoute from './routes/NotFoundRoute.jsx';
 import ProtectedRoute from './routes/ProtectedRoute.jsx';
 import AccountTab from '../features/settings/components/AccountTab.jsx';
-import DangerTab from '../features/settings/components/DangerTab.jsx';
 import PrivacyTab from '../features/settings/components/PrivacyTab.jsx';
-import SecurityTab from '../features/settings/components/SecurityTab.jsx';
 import ComingSoonPage from '../pages/ComingSoonPage.jsx';
 import DiscoverPage from '../pages/DiscoverPage.jsx';
 import EditProfilePage from '../pages/EditProfilePage.jsx';
@@ -71,13 +69,10 @@ export default function AppRouter() {
             <Route path="/u/:username" element={<ProfilePage />} />
             <Route path="/saved" element={<SavedPage />} />
             <Route path="/messages" element={<MessagesPage />} />
-            <Route path="/messages/:conversationId" element={<MessagesPage />} />
             <Route path="/settings" element={<SettingsPage />}>
               <Route index element={<Navigate to="account" replace />} />
               <Route path="account" element={<AccountTab />} />
               <Route path="privacy" element={<PrivacyTab />} />
-              <Route path="security" element={<SecurityTab />} />
-              <Route path="danger" element={<DangerTab />} />
             </Route>
           </Route>
           <Route path="*" element={<NotFoundRoute />} />

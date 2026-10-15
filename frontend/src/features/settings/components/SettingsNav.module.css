@@ -34,17 +34,6 @@
   font-weight: var(--weight-semibold);
 }
 
-/* «Danger» отделена линией сверху и красная */
-.danger {
-  margin-top: 7px;
-  color: var(--danger);
-}
-
-.danger:hover {
-  background: var(--danger-soft);
-  color: var(--danger);
-}
-
 @media (max-width: 640px) {
   .nav {
     display: flex;
@@ -59,9 +48,5 @@
     margin: 0;
     padding: var(--space-2) 9px;
     font-size: var(--text-xs);
-  }
-
-  .danger {
-    margin-top: 0;
   }
 }

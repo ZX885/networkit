@@ -137,3 +137,27 @@ class Profile(models.Model):
                 errors["show_contacts"] = ValidationError(message, code="not_allowed_for_minors")
             if errors:
                 raise ValidationError(errors)
+
+
+class SavedProfile(models.Model):
+    """Закладка: owner сохранил профиль человека saved_user. Видна только владельцу."""
+
+    owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="saved_profiles"
+    )
+    saved_user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="saved_by"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["owner", "saved_user"], name="saved_owner_user_unique"),
+            models.CheckConstraint(
+                condition=~models.Q(owner=models.F("saved_user")), name="saved_not_self"
+            ),
+        ]
+        indexes = [models.Index(fields=["owner", "-created_at"], name="saved_owner_created_idx")]
+
+    def __str__(self):
+        return f"{self.owner_id} → {self.saved_user_id}"

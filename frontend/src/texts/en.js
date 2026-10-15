@@ -41,7 +41,6 @@ export const texts = {
   },
 
   legal: {
-    comingSoon: 'Coming soon',
     termsTitle: 'Terms of Service',
     privacyTitle: 'Privacy Policy',
     text: 'This page is being prepared.',
@@ -178,14 +177,10 @@ export const texts = {
   login: {
     title: 'Welcome back',
     subtitle: 'Sign in to your account',
-    google: 'Continue with Google',
-    googleSoon: 'Google sign-in is coming soon',
-    divider: 'or continue with email',
     email: 'Email',
     emailPlaceholder: 'you@example.com',
     password: 'Password',
     passwordPlaceholder: 'Your password',
-    forgot: 'Forgot password?',
     submit: 'Sign in',
     noAccount: 'No account?',
     createOne: 'Create one',
@@ -195,13 +190,6 @@ export const texts = {
       passwordRequired: 'Enter your password',
     },
     welcome: (name) => `Welcome back, ${name}!`,
-  },
-
-  // Сброс пароля на backend ещё не готов: окно только сообщает об этом (ничего не обещает)
-  forgot: {
-    title: 'Reset password',
-    comingSoon: 'Password reset is coming soon. We will let you know when it is available.',
-    close: 'Close',
   },
 
   register: {
@@ -350,7 +338,6 @@ export const texts = {
       themeSystem: 'System',
       themeLight: 'Light',
       themeDark: 'Dark',
-      unread: (count) => `${count} unread`,
     },
     notFoundTitle: 'Page not found',
     notFoundText: "This page doesn't exist.",
@@ -360,7 +347,6 @@ export const texts = {
     errorTitle: 'Something went wrong',
     metaErrorTitle: "Couldn't load the form data",
     retry: 'Try again',
-    comingSoon: 'Coming soon',
     saved: 'Saved',
   },
 
@@ -397,8 +383,6 @@ export const texts = {
   // Карточка человека (Discover и Saved)
   card: {
     viewProfile: 'View profile',
-    message: 'Message',
-    messageLabel: (name) => `Message ${name}`,
     save: (name) => `Save ${name}`,
     unsave: (name) => `Remove ${name} from saved`,
     savedToast: 'Profile saved',
@@ -411,6 +395,8 @@ export const texts = {
     emptyTitle: 'No saved profiles yet',
     emptyText: 'Tap the bookmark on a profile in Discover to keep it here.',
     emptyAction: 'Go to Discover',
+    limitReached: (max) =>
+      max ? `You can save up to ${max} profiles` : 'You have reached the limit of saved profiles',
   },
 
   // Страница профиля (/me и /u/:username)
@@ -420,7 +406,6 @@ export const texts = {
     share: 'Share profile',
     shareDone: 'Profile link copied',
     shareFailed: "Couldn't copy the link",
-    sendMessage: 'Send message',
     save: 'Save',
     saved: 'Saved',
     joined: (date) => `Joined ${date}`,
@@ -429,9 +414,6 @@ export const texts = {
     interests: 'Interests',
     details: 'Details',
     languages: 'Languages',
-    report: 'Report',
-    reportText: 'If this profile violates our guidelines.',
-    reportButton: 'Report this profile',
     noBio: 'No bio yet.',
     noBioAction: 'Add one',
     labels: {
@@ -456,8 +438,6 @@ export const texts = {
   // Редактирование профиля (форма без отправки до шага B4)
   editProfile: {
     title: 'Edit profile',
-    photo: 'Profile picture',
-    photoHint: 'Upload coming soon',
     basic: 'Basic information',
     firstName: 'First name',
     lastName: 'Last name',
@@ -495,7 +475,7 @@ export const texts = {
   settings: {
     title: 'Settings',
     navLabel: 'Settings sections',
-    tabs: { account: 'Account', privacy: 'Privacy', security: 'Security', danger: 'Danger' },
+    tabs: { account: 'Account', privacy: 'Privacy' },
     account: {
       title: 'Account settings',
       subtitle: 'Your display name and username.',
@@ -518,66 +498,14 @@ export const texts = {
       showJoinDate: 'Show join date',
       showJoinDateHint: 'Display when you joined',
     },
-    security: {
-      title: 'Security',
-      subtitle: 'Change your password or email.',
-      currentPassword: 'Current password',
-      newPassword: 'New password',
-      newPasswordPlaceholder: 'At least 8 characters',
-      confirmPassword: 'Confirm new password',
-      updatePassword: 'Update password',
-      changeEmail: 'Change email',
-      currentEmail: 'Current:',
-      newEmail: 'New email',
-      passwordForEmail: 'Confirm password',
-      updateEmail: 'Update email',
-      errors: {
-        currentRequired: 'Enter your current password',
-        newTooShort: (min) => `Use at least ${min} characters`,
-        mismatch: 'Passwords do not match',
-        emailInvalid: 'Enter a valid email address',
-        passwordRequired: 'Enter your password',
-      },
-    },
-    danger: {
-      title: 'Danger zone',
-      subtitle: 'These actions are permanent and cannot be undone.',
-      deleteTitle: 'Delete account',
-      deleteText: 'Permanently removes your profile, photo, and all data from NetworkIt.',
-      deleteButton: 'Delete my account',
-      modalTitle: 'Delete your account?',
-      modalText: 'Type DELETE to confirm. This cannot be undone.',
-      confirmWord: 'DELETE',
-      confirmLabel: 'Type DELETE to confirm',
-      confirm: 'Delete account',
-      cancel: 'Cancel',
-    },
   },
 
-  // Сообщения (MOCK, см. api/mock/messages.js)
+  // Сообщения (шаг B7): пока заглушка
   messages: {
     title: 'Messages',
-    listLabel: 'Conversations',
-    searchPlaceholder: 'Search conversations…',
-    searchLabel: 'Search conversations',
-    noConversations: 'No conversations yet.',
-    noMatches: 'No conversations match your search.',
-    emptyTitle: 'Your messages',
-    emptyText: "Go to Discover and click Message on someone's card to start a conversation.",
-    viewProfile: 'View profile',
-    back: 'Back to conversations',
-    noMessages: 'No messages yet. Say hello!',
-    inputLabel: 'Message',
-    inputPlaceholder: 'Type a message…',
-    send: 'Send message',
-    sendFailed: 'Message failed to send',
-    you: 'You: ',
-    seen: 'Seen',
-    sent: 'Sent',
-    unread: (count) => `${count} unread messages`,
-    notFoundTitle: 'Conversation not found',
-    chatLabel: (name) => `Conversation with ${name}`,
-    messagesLabel: 'Messages',
+    comingSoonTitle: 'Messages are coming soon',
+    comingSoonText:
+      'Direct messages are not available yet. For now you can find people in Discover and view their profiles.',
   },
 
   // Состояние входа и общие тексты сети
@@ -604,6 +532,8 @@ export const texts = {
     future: 'Date of birth cannot be in the future',
     too_many: 'You selected too many items',
     duplicate: 'Duplicate values are not allowed',
+    cannot_target_self: "You can't do this with your own profile",
+    saved_limit_reached: 'You have reached the limit of saved profiles',
     not_allowed_for_minors: 'Contact links are available from age 18',
     too_common: 'This password is too common',
     entirely_numeric: "Password can't be only digits",

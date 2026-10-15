@@ -2,7 +2,6 @@ import { useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import useMeta from '../../../api/useMeta.js';
 import Alert from '../../../components/ui/Alert.jsx';
-import Avatar from '../../../components/ui/Avatar.jsx';
 import Button from '../../../components/ui/Button.jsx';
 import Field from '../../../components/ui/Field.jsx';
 import { GOAL_ICONS } from '../../../constants/goalIcons.js';
@@ -51,21 +50,6 @@ export default function EditProfileForm({ user }) {
   return (
     <form ref={formRef} className={styles.form} noValidate onSubmit={handleSubmit}>
       {form.generalError && <Alert>{form.generalError}</Alert>}
-      <ProfileSection title={t.photo}>
-        <div className={styles.photo}>
-          <Avatar
-            id={user.username}
-            firstName={user.first_name}
-            lastName={user.last_name}
-            src={user.avatar_url}
-            size="lg"
-          />
-          <Button variant="ghost" size="sm" disabled>
-            {t.photoHint}
-          </Button>
-        </div>
-      </ProfileSection>
-
       <ProfileSection title={t.basic}>
         <div className={styles.grid}>
           <Field label={t.firstName} maxLength={NAME_MAX} {...text('first_name')} />

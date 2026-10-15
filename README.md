@@ -85,6 +85,10 @@ curl -s -b $JAR -c $JAR -X POST -H "$H_ORIGIN" -H "X-CSRFToken: $TOKEN" $BASE/ap
 
 После проверки тестовый аккаунт можно удалить: `python manage.py shell -c "from apps.users.models import User; User.objects.filter(email='me@example.com').delete()"` (профиль удалится вместе с ним).
 
+### Избранное (закладки)
+
+API: `GET /api/saved/` (список), `PUT /api/saved/{username}/` (добавить), `DELETE /api/saved/{username}/` (убрать); оба изменения идемпотентны и отвечают 204. Лимит — 200 закладок на человека (`SAVED_MAX` в `config/settings/base.py`, клиент видит его в `/api/meta/` как `limits.saved_max`); сверх лимита PUT отвечает 409 `saved_limit_reached`. Своя страница или недоступный человек: 400 `cannot_target_self` или 404. Закладки видны только владельцу (в админке — только для чтения).
+
 ### Демо-профили для поиска (seed)
 
 Для ручной проверки поиска и страницы профиля можно создать вымышленных пользователей:

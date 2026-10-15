@@ -32,6 +32,18 @@ class InvalidCredentials(_ApiError):
     default_detail = "Incorrect email or password."
 
 
+class CannotTargetSelf(_ApiError):
+    status_code = status.HTTP_400_BAD_REQUEST
+    default_code = "cannot_target_self"
+    default_detail = "You cannot do this with your own profile."
+
+
+class SavedLimitReached(_ApiError):
+    status_code = status.HTTP_409_CONFLICT
+    default_code = "saved_limit_reached"
+    default_detail = "You have reached the limit of saved profiles."
+
+
 class InvalidToken(_ApiError):
     status_code = status.HTTP_400_BAD_REQUEST
     default_code = "invalid_token"
