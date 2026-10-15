@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { Bookmark, LogOut, MessageCircle, Search, Settings, User } from 'lucide-react';
+import useSummary from '../../app/providers/useSummary.js';
 import useAuth from '../../app/providers/useAuth.js';
 import useLogout from '../../app/providers/useLogout.js';
 import { texts } from '../../texts/en.js';
@@ -16,6 +17,8 @@ const t = texts.app.nav;
 export default function Sidebar({ id, open }) {
   const { user } = useAuth();
   const handleLogout = useLogout();
+  const { summary } = useSummary();
+  const newMessages = summary.unread_messages + summary.pending_requests;
   const ref = useRef(null);
 
   // При открытии на узком экране фокус уходит на первый пункт меню
@@ -39,7 +42,12 @@ export default function Sidebar({ id, open }) {
         <SidebarLink to="/me" icon={User}>
           {t.myProfile}
         </SidebarLink>
-        <SidebarLink to="/messages" icon={MessageCircle}>
+        <SidebarLink
+          to="/messages"
+          icon={MessageCircle}
+          badge={newMessages}
+          badgeLabel={t.unread(newMessages)}
+        >
           {t.messages}
         </SidebarLink>
         <SidebarLink to="/saved" icon={Bookmark}>

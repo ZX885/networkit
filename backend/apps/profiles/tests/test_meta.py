@@ -58,6 +58,8 @@ class MetaTests(APITestCase):
                 "languages_max": 10,
                 "goals_max": 8,
                 "saved_max": settings.SAVED_MAX,
+                "message_max": 4000,
+                "request_max": 500,
             },
         )
         self.assertEqual((limits["min_age"], limits["adult_age"]), (13, 18))

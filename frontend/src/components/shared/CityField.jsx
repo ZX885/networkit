@@ -24,7 +24,8 @@ export default function CityField({
   required = false,
 }) {
   const { meta } = useMeta();
-  const useList = country === meta.country_cities_default;
+  // Нет списка городов от сервера → город вводится текстом
+  const useList = country === meta.country_cities_default && meta.cities.length > 0;
   const match = meta.cities.find((item) => sameName(item.label, city));
   // Свой город (не из списка) показываем текстом, даже если человек «Other» не нажимал (старые данные)
   const other = cityOther || (city.trim() !== '' && !match);

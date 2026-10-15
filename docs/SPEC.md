@@ -129,7 +129,7 @@ UniqueConstraint(reporter, target) при `status=open` (нельзя спами
 | body | TextField | 1–4000 (первое сообщение-запрос — ≤500), после `strip` не пусто | участник |
 | created_at | DateTime | индекс (conversation, created_at) | участник |
 | seen_at | DateTime null | ставит только получатель через `/read/` | участник |
-Сообщения не редактируются и не удаляются клиентом (вне MVP). S в Admin тела сообщений **не видит** (см. вопрос Q-7).
+Сообщения не редактируются и не удаляются клиентом (вне MVP). **Владельцы сайта (суперпользователи, `is_superuser`) могут читать переписку в Django Admin** — модели `Conversation` и `Message` зарегистрированы только для чтения и только для суперпользователя (обычный staff модуль не видит; добавлять, менять и удалять нельзя). Текст сообщения виден только в карточке сообщения; просмотр не пишет `LogEntry`, а приложение не выводит тела сообщений в логи и трейсбеки (ошибки по `/api/conversations/` логируются без текста исключения). **Это нужно указать в Privacy Policy** (переписка не защищена сквозным шифрованием и может просматриваться администрацией).
 
 ### 1.8 Справочники (источник — `profiles/choices.py`, отдаются через `GET /api/meta/`)
 - **status:** `student`, `professional`.
@@ -219,8 +219,8 @@ UniqueConstraint(reporter, target) при `status=open` (нельзя спами
 | `saved` | 60/min | `PUT/DELETE /saved/{username}/` |
 | `avatar` | 10/hour | `PUT /me/avatar/` |
 | `report` | 10/day | `POST /reports/` |
-| `message_request` | 10/day, ≤20 одновременно в `pending` | `POST /conversations/` |
-| `message_send` | 30/min и 500/day | `POST /conversations/{id}/messages/` |
+| `message_request` | 10/day на пользователя | `POST /conversations/` (429). Отдельно: не более `PENDING_REQUESTS_MAX` = 20 одновременно висящих исходящих запросов (**409 `pending_requests_limit_reached`**, а не 429: это состояние, а не частота) |
+| `message_send` | 30/min (`message_send`) и 500/day (`message_send_day`) | `POST /conversations/{id}/messages/` |
 | `block` | 30/hour | `PUT /blocks/{username}/` |
 
 Ответ 429:
@@ -248,7 +248,7 @@ UniqueConstraint(reporter, target) при `status=open` (нельзя спами
   "cities": [{"code": "tashkent", "label": "Tashkent"}, {"code": "samarkand", "label": "Samarkand"}],
   "country_cities_default": "UZ",
   "report_reasons": [],
-  "limits": {"bio_max": 300, "min_age": 13, "adult_age": 18, "interests_max": 10, "languages_max": 10, "goals_max": 8, "saved_max": 200}
+  "limits": {"bio_max": 300, "min_age": 13, "adult_age": 18, "interests_max": 10, "languages_max": 10, "goals_max": 8, "saved_max": 200, "message_max": 4000, "request_max": 500}
 }
 ```
 `cities` — справочник городов Узбекистана (24 города, `profiles/choices.py: UZ_CITIES`; код — название в нижнем регистре, метка — английское название), `country_cities_default` — страна, для которой клиент показывает этот список. «Other» в справочник не входит (это вариант интерфейса: свободный текст). Ответ публичный и кэшируемый (`Cache-Control: public, max-age=3600`, `ETag`, на `If-None-Match` — `304`). `report_reasons` пока пустой (жалобы появятся позже); остальные лимиты (`message_max`, `avatar_max_mb` и др.) добавятся вместе с соответствующими функциями.
@@ -359,28 +359,27 @@ UniqueConstraint(reporter, target) при `status=open` (нельзя спами
 | POST | `/api/reports/` | пользователь | `{"username","reason","details"}` | `201 {"status":"received"}`; дубль открытой жалобы — тоже `201` (без раскрытия); на себя — 400 |
 
 ### 3.8 Диалоги (запросы на переписку)
-Формат **Conversation**:
+Формат **Conversation** (все поля всегда есть; ничего лишнего: нет email, даты рождения и т.п.):
 ```json
 {
   "id": "6f1c2c0e-8d3e-4a6f-9d58-3a2a1d6c9f10",
   "other_user": {"username": "alex", "first_name": "Alex", "last_name": "Kim", "avatar_url": null, "field_label": "Design"},
-  "status": "pending", "initiated_by_me": true, "blocked_by_me": false,
+  "status": "pending", "initiated_by_me": true,
   "last_message": {"body": "Hi! I saw your project...", "sender_is_me": true, "created_at": "2026-10-10T09:00:00Z"},
   "unread_count": 0, "last_message_at": "2026-10-10T09:00:00Z", "created_at": "2026-10-10T09:00:00Z"
 }
 ```
-`status` — значение **с точки зрения зрителя** (маскирование, §7.2).
+Имя собеседника берётся через `ProfileVisibility.name()` (одно место, где можно изменить показ имён). `status` — с точки зрения зрителя: у **инициатора** `declined` всегда показывается как `pending` (отказ не сообщается). Чужой диалог, несуществующий UUID и диалог с недоступным собеседником (забанен, неактивен, не подтверждён) → 404. Данные при бане собеседника сохраняются.
 
-| Метод | URL | Доступ | Тело | Ответ |
-|---|---|---|---|---|
-| GET | `/api/conversations/?box=chats\|requests\|sent` | пользователь | — | пагинированный список Conversation. `chats` — принятые; `requests` — входящие `pending`; `sent` — мои исходящие запросы (включая отклонённые, показанные как `pending`). Диалоги, заблокированные мной, и диалоги с забаненными не показываются. По умолчанию `chats`. Сортировка `-last_message_at` |
-| POST | `/api/conversations/` | пользователь | `{"username","body"}` (body ≤500) | `201 {"conversation": {...}, "message": {...}}` |
-| GET | `/api/conversations/{id}/` | участник | — | Conversation |
-| POST | `/api/conversations/{id}/accept/` | получатель | — | `200` Conversation (`accepted`); не `pending` → 409 `invalid_state` |
-| POST | `/api/conversations/{id}/decline/` | получатель | — | `200` Conversation (`declined` для получателя); не `pending` → 409 `invalid_state` |
-| GET | `/api/conversations/summary/` | пользователь | — | `{"unread_messages": 3, "pending_requests": 1}` (для бейджей, опрос раз в 30 с) |
+| Метод | URL | Тело | Ответ |
+|---|---|---|---|
+| GET | `/api/conversations/?box=chats\|requests\|sent` | — | пагинированный список Conversation, порядок `-last_message_at`. `chats` (по умолчанию) — принятые; `requests` — входящие `pending`; `sent` — мои исходящие запросы (`pending` и `declined`, оба как `pending`). Что отклонил я сам, не показывается ни в одном `box`. Неизвестный `box` → 400 |
+| POST | `/api/conversations/` | `{"username","body"}` | `201 {"conversation": {...}, "message": {...}}` — диалог `pending` и первое сообщение в одной транзакции |
+| GET | `/api/conversations/{id}/` | — | Conversation (участник) |
+| POST | `/api/conversations/{id}/accept/`, `/decline/` | — | `200` Conversation. Только получатель и только из `pending`, иначе 409 `invalid_state` (инициатору — всегда `invalid_state`, чтобы отказ оставался замаскированным; решение окончательное) |
+| GET | `/api/conversations/summary/` | — | `{"unread_messages": 3, "pending_requests": 1}` (для бейджей, опрос раз в 30 с). Непрочитанные считаются только по принятым диалогам |
 
-Ошибки `POST /api/conversations/`: 400 `validation_error` (пустое тело, длина, `username` отсутствует); 400 `cannot_target_self`; 404 `not_found` (цель не существует, забанена, **или заблокировала вас**); 409 `conversation_exists` (уже `accepted`; в теле `conversation_id`); 409 `request_pending` (вы уже отправили запрос, в т.ч. отклонённый — маскирование); 409 `incoming_request_exists` (цель уже прислала вам запрос — примите его); 429 (лимиты §3.0).
+`POST /api/conversations/`: `body` после замены `\r\n → \n` и `strip` — 1…`request_max` (500) символов (400 `required` / `too_long`). Текст хранится как есть, без HTML-обработки. Правило «можно ли начать диалог» — одна функция `apps/messaging/rules.py: can_start_conversation(sender, target)` (сейчас: цель видима — активна, не забанена, почта подтверждена, есть профиль; не я сам; `show_in_search=false` не мешает; ограничений по возрасту нет — их добавлять в этой функции). Ошибки: 400 `validation_error`; 400 `cannot_target_self`; 404 `not_found` (цели нет, забанена, неактивна, не подтверждена); 409 `conversation_exists` (уже `accepted`; в теле `conversation_id`); 409 `request_pending` (вы уже отправляли запрос, в том числе отклонённый; `conversation_id`); 409 `incoming_request_exists` (цель уже прислала запрос — примите его; `conversation_id`); 403 `conversation_closed` (вы сами отклонили входящий запрос от этого человека); 409 `pending_requests_limit_reached`; 429 (лимит новых запросов в сутки). Гонка встречных запросов решается ограничением `UNIQUE(user_a, user_b)`: проигравший получает 409, не 500. **Лимит висящих (20):** считаются `pending` всегда, а `declined` — только `DECLINED_COUNTS_DAYS` (7) дней после `decided_at`; иначе освободившийся слот выдал бы отказ.
 
 ### 3.9 Сообщения
 Формат **Message**:
@@ -389,9 +388,9 @@ UniqueConstraint(reporter, target) при `status=open` (нельзя спами
 ```
 | Метод | URL | Доступ | Описание |
 |---|---|---|---|
-| GET | `/api/conversations/{id}/messages/` | участник | Курсорная выдача, порядок по возрастанию `id`. Параметры: `limit` (по умолчанию 30, максимум 50), `before=<id>` (более старые), `after=<id>` (более новые — для опроса). Ответ: `{"results":[Message…], "has_more_older": true}` |
-| POST | `/api/conversations/{id}/messages/` | участник по §7.3 | `{"body": "..."}` → `201` Message; ошибки: 400 `validation_error`; 403 `accept_required` (получатель пишет в `pending`); 409 `request_pending` (инициатор второй раз в `pending`); 403 `conversation_closed` (declined/блокировка — нейтральный текст «You can't send messages to this user.»); 429 |
-| POST | `/api/conversations/{id}/read/` | участник | Помечает входящие `seen_at=now`. Ответ `200 {"updated": 3}` |
+| GET | `/api/conversations/{id}/messages/` | участник | Курсорная выдача по возрастанию `id`. Параметры: `limit` (по умолчанию 30, максимум 50; кривое или нулевое значение — 30), `before=<id>` (более старые), `after=<id>` (более новые — для опроса); кривой `before`/`after` → 400. Ответ: `{"results":[Message…], "has_more_older": true}`. Сообщения запроса в `pending` читают оба участника |
+| POST | `/api/conversations/{id}/messages/` | участник по §7.3 | `{"body": "..."}` (1…`message_max` = 4000 после `strip`) → `201` Message. Ошибки: 400 `validation_error`; `accepted` — оба участника; `pending` — получатель 403 `accept_required`, инициатор 409 `request_pending`; `declined` — получатель 403 `conversation_closed` («You can't send messages to this user.»), **инициатор 409 `request_pending`** (маскирование); 429. Обновляет `last_message_at` |
+| POST | `/api/conversations/{id}/read/` | участник | Помечает входящие `seen_at=now`, ответ `200 {"updated": 3}`. Только в `accepted`: в `pending`/`declined` ответ `{"updated": 0}` и ничего не помечается (иначе инициатор по `seen_at` узнал бы, что получатель открыл запрос до решения) |
 
 ### 3.10 Фронтовые маршруты, на которые ссылаются письма
 `/verify-email/:token`, `/reset-password/:uid/:token`, `/confirm-email-change/:token`. Базовый адрес берётся из `SITE_URL`.
@@ -511,7 +510,7 @@ PUT/DELETE избранного и блокировок идемпотентны
 |---|---|---|
 | `pending` | инициатор отправил запрос с первым сообщением, ответа нет | никто, кроме отправленного первого сообщения: инициатор — нет (409 `request_pending`), получатель — нет, пока не примет (403 `accept_required`) |
 | `accepted` | получатель принял | оба участника |
-| `declined` | получатель отклонил | никто (403 `conversation_closed`) |
+| `declined` | получатель отклонил | никто (получатель — 403 `conversation_closed`, инициатор — 409 `request_pending`: отказ ему не сообщается) |
 | *заблокирован* (вычисляется: есть `Block` в любую сторону) | один из участников заблокировал другого | никто (403 `conversation_closed`) |
 
 ### 7.2 Что видит каждый (маскирование)
@@ -527,12 +526,12 @@ PUT/DELETE избранного и блокировок идемпотентны
 | Нет диалога | `POST /conversations/` → создаётся `pending` + первое сообщение | — |
 | `pending` | 409 `request_pending` | `accept` / `decline` / блок / жалоба; сообщение → 403 `accept_required` |
 | `accepted` | ✅ | ✅ |
-| `declined` | 403 `conversation_closed` | 403 `conversation_closed` (отправка после отказа не предусмотрена) |
+| `declined` | 409 `request_pending` (маскирование: неотличимо от `pending`) | 403 `conversation_closed` (нейтральный текст) |
 | Блокировка (любая сторона) | 403 `conversation_closed` | 403 `conversation_closed` |
 
 ### 7.4 Остальные правила
 - Одна пара пользователей — максимум один диалог (UNIQUE `user_a<user_b`).
-- Лимиты: не более 20 одновременно висящих исходящих запросов, 10 новых запросов в сутки, 30 сообщений в минуту (§3.0).
+- Лимиты: не более 20 одновременно висящих исходящих запросов (`pending` и `declined` не старше 7 дней; 409 `pending_requests_limit_reached`), 10 новых запросов в сутки, 30 сообщений в минуту и 500 в сутки (§3.0).
 - Прочитанность: `seen_at` ставит получатель через `read`; счётчик `unread_count` считается только по принятым диалогам, запросы — отдельным счётчиком `pending_requests`.
 - Ограничения возраста между взрослыми и 16–17 — Q-1 (рекомендуется решить до реализации §7).
 - Удаление аккаунта удаляет его диалоги и сообщения у обеих сторон (каскад, как в legacy); альтернатива — Q-8.

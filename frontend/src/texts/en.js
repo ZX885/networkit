@@ -338,6 +338,7 @@ export const texts = {
       themeSystem: 'System',
       themeLight: 'Light',
       themeDark: 'Dark',
+      unread: (count) => `${count} new`,
     },
     notFoundTitle: 'Page not found',
     notFoundText: "This page doesn't exist.",
@@ -346,6 +347,10 @@ export const texts = {
     loading: 'Loading',
     errorTitle: 'Something went wrong',
     metaErrorTitle: "Couldn't load the form data",
+    metaIncomplete: 'The server sent incomplete data. Please try again in a moment',
+    errorText: 'The page could not be shown. Reloading usually helps.',
+    reload: 'Reload',
+    supportHint: 'If this keeps happening, please contact support',
     retry: 'Try again',
     saved: 'Saved',
   },
@@ -513,14 +518,96 @@ export const texts = {
   // Сообщения (шаг B7): пока заглушка
   messages: {
     title: 'Messages',
-    comingSoonTitle: 'Messages are coming soon',
-    comingSoonText:
-      'Direct messages are not available yet. For now you can find people in Discover and view their profiles.',
+    tabsLabel: 'Conversation folders',
+    tabs: { chats: 'Chats', requests: 'Requests', sent: 'Sent' },
+    listLabel: 'Conversations',
+    searchPlaceholder: 'Search conversations…',
+    searchLabel: 'Search conversations',
+    empty: {
+      chats: {
+        title: 'No chats yet',
+        text: 'Accepted conversations appear here. Find someone in Discover and send a message request.',
+      },
+      requests: {
+        title: 'No message requests',
+        text: 'When someone asks to chat with you, their request will appear here.',
+      },
+      sent: {
+        title: 'No sent requests',
+        text: 'Requests you send wait here until the person replies.',
+      },
+      noMatches: 'No conversations match your search.',
+    },
+    noSelectionTitle: 'Your messages',
+    noSelectionText: 'Pick a conversation to read it and reply.',
+    viewProfile: 'View profile',
+    back: 'Back to conversations',
+    you: 'You: ',
+    unread: (count) => `${count} unread messages`,
+    newCount: 'new',
+    sentPreview: 'Request sent',
+    seen: 'Seen',
+    sent: 'Sent',
+    loading: 'Loading',
+    loadEarlier: 'Load earlier messages',
+    noMessages: 'No messages yet.',
+    inputLabel: 'Message',
+    inputPlaceholder: 'Type a message…',
+    send: 'Send message',
+    chatLabel: (name) => `Conversation with ${name}`,
+    messagesLabel: 'Messages',
+    notFoundTitle: 'Conversation not found',
+    notFoundText: "This conversation doesn't exist or isn't available.",
+    // Безопасность и приватность (формулировку подтверждает заказчик)
+    safety:
+      "Don't share your phone number, address or other personal contacts with people you don't know. Report anything that makes you uncomfortable.",
+    notEncrypted:
+      'Messages are not end-to-end encrypted and may be reviewed by NetworkIt administrators.',
+    requestBar: {
+      title: (name) => `${name} wants to chat`,
+      text: 'Accept to start chatting, or decline to ignore this request.',
+      accept: 'Accept',
+      decline: 'Decline',
+      accepted: 'Request accepted',
+      declined: 'Request declined',
+      sentTitle: 'Request sent',
+      sentText: 'You can write more once the person accepts your request.',
+      closedText: 'This conversation is closed.',
+    },
+    request: {
+      title: 'Send a message request',
+      intro: (name) =>
+        `Say hello to ${name}. They can accept or decline. You can keep writing once they accept.`,
+      label: 'Your message',
+      placeholder: 'Write your first message…',
+      counter: (length, max) => `${length}/${max}`,
+      send: 'Send request',
+      cancel: 'Cancel',
+      sentToast: 'Message request sent',
+      open: 'Open the conversation',
+      message: 'Message',
+      messageLabel: (name) => `Send a message request to ${name}`,
+    },
+    errors: {
+      empty: 'Write a message first',
+      tooLong: (max) => `Use at most ${max} characters`,
+      notAvailable: "This person isn't available",
+      generic: "Couldn't send the message. Please try again",
+      loadFailed: "Couldn't load the conversation",
+    },
   },
 
   // Состояние входа и общие тексты сети
   auth: {
-    throttled: (seconds) => `Too many attempts. Try again in ${seconds} seconds.`,
+    throttled: (seconds) => {
+      const wait =
+        seconds < 90
+          ? `${seconds} seconds`
+          : seconds < 5400
+            ? `${Math.ceil(seconds / 60)} minutes`
+            : `${Math.ceil(seconds / 3600)} hours`;
+      return `Too many attempts. Try again in ${wait}.`;
+    },
     unavailableTitle: "Can't reach the server",
     tryAgain: 'Try again',
   },
@@ -542,6 +629,15 @@ export const texts = {
     future: 'Date of birth cannot be in the future',
     too_many: 'You selected too many items',
     duplicate: 'Duplicate values are not allowed',
+    conversation_exists: 'You already have a conversation with this person',
+    request_pending: 'Your message request is waiting for a reply',
+    incoming_request_exists:
+      'This person has already sent you a request. Accept it to start chatting',
+    invalid_state: 'This request has already been handled',
+    pending_requests_limit_reached:
+      'You have too many requests waiting for a reply. Try again after some of them are answered',
+    accept_required: 'Accept the message request first',
+    conversation_closed: "You can't send messages to this person",
     cannot_target_self: "You can't do this with your own profile",
     saved_limit_reached: 'You have reached the limit of saved profiles',
     not_allowed_for_minors: 'Contact links are available from age 18',

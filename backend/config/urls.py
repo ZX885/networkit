@@ -11,6 +11,7 @@ urlpatterns = [
     path("api/health/", health, name="health"),
     path("api/", include("apps.users.urls")),
     path("api/", include("apps.profiles.urls")),
+    path("api/", include("apps.messaging.urls")),
 ]
 
 # JSON вместо HTML-страниц Django для адресов /api/

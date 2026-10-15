@@ -4,6 +4,7 @@ import { formatPlace, fullName, labelOf } from '../../lib/labels.js';
 import { texts } from '../../texts/en.js';
 import Avatar from '../ui/Avatar.jsx';
 import ButtonLink from '../ui/ButtonLink.jsx';
+import MessageRequestButton from '../../features/messages/components/MessageRequestButton.jsx';
 import Tag from '../ui/Tag.jsx';
 import useSavedToggle from './useSavedToggle.js';
 import styles from './PersonCard.module.css';
@@ -50,6 +51,7 @@ export default function PersonCard({ person, onSavedChange, onSavedRevert }) {
         <ButtonLink to={`/u/${person.username}`} size="sm" className={styles.view}>
           {t.viewProfile}
         </ButtonLink>
+        <MessageRequestButton person={person} />
         <button
           type="button"
           className={[styles.bookmark, saved && styles.bookmarked].filter(Boolean).join(' ')}

@@ -1,0 +1,47 @@
+.messages {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 7px;
+  padding: var(--space-4);
+  overflow-y: auto;
+}
+
+.none {
+  margin: auto;
+  font-size: var(--text-sm);
+  color: var(--text-faint);
+}
+
+/* legacy .msg-day: линии по бокам от даты */
+.day {
+  position: relative;
+  margin: var(--space-2) 0;
+  text-align: center;
+  font-size: 11px;
+  color: var(--text-faint);
+}
+
+.day::before,
+.day::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: 35%;
+  height: 1px;
+  background: var(--border);
+}
+
+.day::before {
+  left: 0;
+}
+
+.day::after {
+  right: 0;
+}
+
+.earlier {
+  display: flex;
+  justify-content: center;
+  margin-bottom: var(--space-2);
+}

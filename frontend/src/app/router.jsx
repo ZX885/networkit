@@ -69,6 +69,7 @@ export default function AppRouter() {
             <Route path="/u/:username" element={<ProfilePage />} />
             <Route path="/saved" element={<SavedPage />} />
             <Route path="/messages" element={<MessagesPage />} />
+            <Route path="/messages/:conversationId" element={<MessagesPage />} />
             <Route path="/settings" element={<SettingsPage />}>
               <Route index element={<Navigate to="account" replace />} />
               <Route path="account" element={<AccountTab />} />
