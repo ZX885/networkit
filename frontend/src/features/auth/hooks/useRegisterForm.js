@@ -8,7 +8,7 @@ import useUsernameCheck from './useUsernameCheck.js';
 
 export const TOTAL_STEPS = 8;
 
-const INITIAL_DATA = {
+const initialData = (defaultCountry) => ({
   firstName: '',
   lastName: '',
   username: '',
@@ -18,9 +18,10 @@ const INITIAL_DATA = {
   birthMonth: '',
   birthYear: '',
   gender: '',
-  country: '',
+  country: defaultCountry, // страна по умолчанию — с сервера (meta.country_cities_default)
   region: '',
   city: '',
+  cityOther: false, // выбран вариант «Other» (свой город текстом)
   status: '',
   school: '',
   university: '',
@@ -36,16 +37,17 @@ const INITIAL_DATA = {
   linkedin: '',
   publicEmail: '',
   acceptedTerms: false,
-};
+});
 
 // Всё состояние мастера регистрации: текущий шаг, введённые данные (сохраняются при
 // переходах назад), ошибки, отправка. Шаги только читают и меняют данные через update().
-// limits — meta.limits с сервера (возраст и максимумы), хук вызывается, когда справочники уже загружены.
+// meta — справочники сервера (лимиты, страна по умолчанию); хук вызывается, когда они уже загружены.
 // Ошибки бывают клиентские (проверка шага) и серверные (ответ API): серверные остаются у поля,
 // пока человек его не изменит.
-export default function useRegisterForm(limits) {
+export default function useRegisterForm(meta) {
+  const { limits } = meta;
   const [step, setStep] = useState(1);
-  const [data, setData] = useState(INITIAL_DATA);
+  const [data, setData] = useState(() => initialData(meta.country_cities_default));
   const [clientErrors, setClientErrors] = useState({});
   const [serverErrors, setServerErrors] = useState({});
   const [focusSignal, setFocusSignal] = useState(0); // растёт при ошибке → фокус на первое поле с ошибкой

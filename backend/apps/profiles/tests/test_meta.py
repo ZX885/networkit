@@ -22,6 +22,8 @@ class MetaTests(APITestCase):
                 "interests",
                 "languages",
                 "goals",
+                "cities",
+                "country_cities_default",
                 "report_reasons",
                 "limits",
             },
@@ -73,3 +75,21 @@ class MetaTests(APITestCase):
 
     def test_only_get_is_allowed(self):
         self.assertEqual(self.client.post(META, {}, format="json").status_code, 405)
+
+
+class MetaCitiesTests(APITestCase):
+    def test_cities_are_uzbekistan_cities_with_unique_lowercase_codes(self):
+        data = self.client.get(META).json()
+
+        cities = data["cities"]
+        self.assertEqual(len(cities), 24)
+        self.assertEqual(cities, [{"code": c, "label": label} for c, label in choices.UZ_CITIES])
+        codes = [city["code"] for city in cities]
+        self.assertEqual(len(codes), len(set(codes)))
+        for city in cities:
+            self.assertEqual(city["code"], city["code"].lower())
+            self.assertTrue(city["label"])
+        self.assertIn({"code": "tashkent", "label": "Tashkent"}, cities)
+        self.assertIn({"code": "almalyk", "label": "Almalyk"}, cities)
+        self.assertEqual(data["country_cities_default"], "UZ")
+        self.assertIn("UZ", [country["code"] for country in data["countries"]])

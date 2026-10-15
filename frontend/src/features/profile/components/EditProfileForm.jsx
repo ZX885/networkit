@@ -1,11 +1,12 @@
 import { useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import useMeta from '../../../api/useMeta.js';
+import CityField from '../../../components/shared/CityField.jsx';
 import Alert from '../../../components/ui/Alert.jsx';
 import Button from '../../../components/ui/Button.jsx';
 import Field from '../../../components/ui/Field.jsx';
 import { GOAL_ICONS } from '../../../constants/goalIcons.js';
-import { CITY_MAX, NAME_MAX, UNIVERSITY_MAX, YEAR_LEVEL_MAX } from '../../../constants/rules.js';
+import { NAME_MAX, UNIVERSITY_MAX, YEAR_LEVEL_MAX } from '../../../constants/rules.js';
 import { texts } from '../../../texts/en.js';
 import useEditProfile from '../hooks/useEditProfile.js';
 import ChipsSection from './ChipsSection.jsx';
@@ -69,7 +70,17 @@ export default function EditProfileForm({ user }) {
           <Field as="select" label={t.country} {...text('country')}>
             {options(meta.countries)}
           </Field>
-          <Field label={t.city} maxLength={CITY_MAX} {...text('city')} />
+          <CityField
+            label={t.city}
+            country={values.country}
+            city={values.city}
+            cityOther={values.cityOther}
+            error={errors.city}
+            onChange={(city, cityOther) => {
+              form.set('city', city);
+              form.set('cityOther', cityOther);
+            }}
+          />
         </div>
         <Field
           label={t.yearLevel}

@@ -132,3 +132,27 @@ class SeedRepeatAndDeleteTests(TestCase):
         seed("--delete", FLAG)
 
         self.assertEqual(User.objects.count(), 0)
+
+
+class SeedPlacesTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        seed("--count", "40", FLAG)
+
+    def test_mostly_cities_of_uzbekistan_from_the_list(self):
+        from apps.profiles import choices
+
+        labels = {label for _code, label in choices.UZ_CITIES}
+        profiles = list(Profile.objects.all())
+        in_list = [p for p in profiles if p.country == "UZ" and p.city in labels]
+
+        self.assertGreaterEqual(len(in_list), 0.6 * len(profiles))
+
+    def test_has_other_uzbek_cities_and_other_countries(self):
+        from apps.profiles import choices
+
+        labels = {label for _code, label in choices.UZ_CITIES}
+        profiles = list(Profile.objects.all())
+
+        self.assertTrue(any(p.country == "UZ" and p.city not in labels for p in profiles))
+        self.assertTrue(any(p.country != "UZ" for p in profiles))

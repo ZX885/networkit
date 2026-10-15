@@ -72,8 +72,8 @@ export const texts = {
         {
           icon: 'search',
           title: 'Smart search & filters',
-          // ИЗМЕНЕНО: legacy «…field, city, university, goals, and languages…» (фильтров по городу и вузу в MVP нет)
-          text: "Filter by field, country, status, goals, and languages. Find exactly who you're looking for.",
+          // ИЗМЕНЕНО: legacy «…field, city, university, goals, and languages…» (фильтра по вузу в MVP нет)
+          text: "Filter by field, city, status, goals, and languages. Find exactly who you're looking for.",
         },
         {
           icon: 'globe',
@@ -359,6 +359,8 @@ export const texts = {
     filtersLabel: 'Filters',
     country: 'Country',
     allCountries: 'All countries',
+    city: 'City',
+    allCities: 'All cities',
     field: 'Field',
     allFields: 'All fields',
     status: 'Status',
@@ -498,6 +500,14 @@ export const texts = {
       showJoinDate: 'Show join date',
       showJoinDateHint: 'Display when you joined',
     },
+  },
+
+  // Выбор города в формах (регистрация, редактирование профиля)
+  location: {
+    select: 'Select city',
+    other: 'Other',
+    otherLabel: 'Your city',
+    otherPlaceholder: 'Type your city',
   },
 
   // Сообщения (шаг B7): пока заглушка

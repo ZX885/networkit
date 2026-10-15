@@ -27,6 +27,7 @@ const fromUser = (user) => ({
   university: user.university ?? '',
   country: user.country,
   city: user.city ?? '',
+  cityOther: false, // выбран «Other»; в запрос не уходит (уходит только название города)
   year_level: user.year_level ?? '',
   bio: user.bio ?? '',
   contacts: { ...user.contacts },

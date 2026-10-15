@@ -1,8 +1,17 @@
 import { useSearchParams } from 'react-router-dom';
+import { SHOW_COUNTRY_FILTER } from '../../../constants/features.js';
 
-export const FILTER_KEYS = ['country', 'field', 'status', 'goal', 'language'];
+// Фильтр стран скрыт флагом SHOW_COUNTRY_FILTER: тогда country из адреса игнорируется и не отправляется
+export const FILTER_KEYS = [
+  ...(SHOW_COUNTRY_FILTER ? ['country'] : []),
+  'city',
+  'field',
+  'status',
+  'goal',
+  'language',
+];
 
-// Поиск, фильтры и страница лежат в адресе (/discover?q=&country=&…&page=), поэтому «Назад» работает.
+// Поиск, фильтры и страница лежат в адресе (/discover?q=&city=&field=&…&page=), поэтому «Назад» работает.
 // update(patch) меняет часть параметров; любое изменение, кроме номера страницы, сбрасывает страницу.
 export default function useDiscoverParams() {
   const [searchParams, setSearchParams] = useSearchParams();

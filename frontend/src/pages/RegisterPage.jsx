@@ -24,7 +24,7 @@ function RegisterFrame({ children }) {
 // при повторной загрузке, а списки не бывают пустыми.
 function RegisterFlow() {
   const { meta } = useMeta();
-  const form = useRegisterForm(meta.limits);
+  const form = useRegisterForm(meta);
 
   if (form.registeredEmail) return <CheckEmail email={form.registeredEmail} />;
 

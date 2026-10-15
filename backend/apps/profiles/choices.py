@@ -209,6 +209,39 @@ GENDERS = [
     ("undisclosed", "Prefer not to say"),
 ]
 
+# Города Узбекистана для фильтра поиска и выбора в формах (решение заказчика: сначала Узбекистан).
+# В профиле город остаётся свободным текстом (Profile.city); фильтр сравнивает его с названием города
+# из этого списка. Код — название в нижнем регистре; «Other» (любой другой город) в справочник не входит.
+UZ_CITIES = [
+    ("tashkent", "Tashkent"),
+    ("samarkand", "Samarkand"),
+    ("bukhara", "Bukhara"),
+    ("andijan", "Andijan"),
+    ("namangan", "Namangan"),
+    ("fergana", "Fergana"),
+    ("nukus", "Nukus"),
+    ("karshi", "Karshi"),
+    ("termez", "Termez"),
+    ("urgench", "Urgench"),
+    ("khiva", "Khiva"),
+    ("jizzakh", "Jizzakh"),
+    ("gulistan", "Gulistan"),
+    ("navoi", "Navoi"),
+    ("kokand", "Kokand"),
+    ("margilan", "Margilan"),
+    ("chirchiq", "Chirchiq"),
+    ("angren", "Angren"),
+    ("almalyk", "Almalyk"),
+    ("bekabad", "Bekabad"),
+    ("zarafshan", "Zarafshan"),
+    ("shahrisabz", "Shahrisabz"),
+    ("denau", "Denau"),
+    ("asaka", "Asaka"),
+]
+
+# Для какой страны клиент показывает список городов (UZ_CITIES)
+COUNTRY_CITIES_DEFAULT = "UZ"
+
 
 def codes(choices):
     """Список кодов из списка пар (код, название)."""

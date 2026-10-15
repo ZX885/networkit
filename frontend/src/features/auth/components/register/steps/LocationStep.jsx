@@ -1,3 +1,4 @@
+import CityField from '../../../../../components/shared/CityField.jsx';
 import Field from '../../../../../components/ui/Field.jsx';
 import useMeta from '../../../../../api/useMeta.js';
 import { texts } from '../../../../../texts/en.js';
@@ -5,7 +6,7 @@ import { errorText } from '../../../../../lib/apiErrors.js';
 
 const f = texts.register.fields;
 
-// Шаг 2: страна, регион, город.
+// Шаг 2: страна (по умолчанию Uzbekistan), регион, город (для Узбекистана — список с вариантом «Other»).
 export default function LocationStep({ form }) {
   const { data, errors, update } = form;
   const { meta } = useMeta();
@@ -36,14 +37,18 @@ export default function LocationStep({ form }) {
         onChange={text('region')}
         error={errorText(errors.region)}
       />
-      <Field
+      <CityField
         label={f.city}
         required
         placeholder={f.cityPlaceholder}
-        autoComplete="address-level2"
-        value={data.city}
-        onChange={text('city')}
+        country={data.country}
+        city={data.city}
+        cityOther={data.cityOther}
         error={errorText(errors.city)}
+        onChange={(city, cityOther) => {
+          update('city', city);
+          update('cityOther', cityOther);
+        }}
       />
     </>
   );

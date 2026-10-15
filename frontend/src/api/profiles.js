@@ -3,7 +3,7 @@ import { api } from '../lib/apiClient.js';
 
 export const PAGE_SIZE = 12; // размер страницы по умолчанию на сервере
 
-const FILTERS = ['q', 'country', 'field', 'status', 'goal', 'language'];
+const FILTERS = ['q', 'country', 'city', 'field', 'status', 'goal', 'language'];
 
 // params: { q, country, field, status, goal, language, page } — пустые значения не отправляем.
 // Возвращает { count, pageCount, results: [Card] }. signal (AbortController) отменяет устаревший запрос.
