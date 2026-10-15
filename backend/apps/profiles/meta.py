@@ -27,6 +27,7 @@ def build_meta():
             "interests_max": INTERESTS_MAX,
             "languages_max": LANGUAGES_MAX,
             "goals_max": GOALS_MAX,
+            "saved_max": settings.SAVED_MAX,
         },
     }
 

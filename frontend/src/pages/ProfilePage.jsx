@@ -6,7 +6,6 @@ import Button from '../components/ui/Button.jsx';
 import Spinner from '../components/ui/Spinner.jsx';
 import ProfileActions from '../features/profile/components/ProfileActions.jsx';
 import ProfileView from '../features/profile/components/ProfileView.jsx';
-import ReportBlock from '../features/profile/components/ReportBlock.jsx';
 import useProfile from '../features/profile/hooks/useProfile.js';
 import { texts } from '../texts/en.js';
 import styles from './ProfilePage.module.css';
@@ -49,13 +48,11 @@ export default function ProfilePage() {
       <div className={styles.bar}>
         <BackLink to="/discover" />
         <div className={styles.actions}>
-          <ProfileActions />
+          <ProfileActions key={profile.username} profile={profile} />
         </div>
       </div>
       <MetaGate>
-        <ProfileView profile={profile}>
-          <ReportBlock />
-        </ProfileView>
+        <ProfileView profile={profile} />
       </MetaGate>
     </>
   );

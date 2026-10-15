@@ -1,50 +1,54 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { Bookmark } from 'lucide-react';
-import { listSavedPeople } from '../api/mock/people.js';
+import { useSearchParams } from 'react-router-dom';
 import MetaGate from '../components/shared/MetaGate.jsx';
 import PageHeader from '../components/shared/PageHeader.jsx';
 import Button from '../components/ui/Button.jsx';
 import ButtonLink from '../components/ui/ButtonLink.jsx';
 import EmptyState from '../components/ui/EmptyState.jsx';
+import Pagination from '../components/ui/Pagination.jsx';
 import PeopleGrid from '../features/discover/components/PeopleGrid.jsx';
+import useSaved from '../features/saved/hooks/useSaved.js';
+import { apiErrorText } from '../lib/apiErrors.js';
 import { texts } from '../texts/en.js';
 
 const t = texts.saved;
 
-// Избранное (MOCK: api/mock/people.js, потом GET /api/saved/). Карточки те же, что в Discover.
+// Избранное: GET /api/saved/ (новые закладки первыми), страница в адресе (?page=). Карточки те же,
+// что в Discover. Снятая закладка сразу уходит из списка и возвращается, если запрос не удался.
 export default function SavedPage() {
-  const [attempt, setAttempt] = useState(0);
-  const [state, setState] = useState({ attempt: null, people: null, error: false });
+  const [searchParams, setSearchParams] = useSearchParams();
+  const parsed = Number.parseInt(searchParams.get('page') ?? '', 10);
+  const page = Number.isInteger(parsed) && parsed > 0 ? parsed : 1;
+  const { loading, error, data, retry, remove, restore } = useSaved(page);
 
+  const setPage = (next, options) =>
+    setSearchParams(next > 1 ? { page: String(next) } : {}, options);
+
+  // Страницы с таким номером нет (старая ссылка) или текущая опустела после снятия закладок
+  const pageMissing = error?.status === 404 && page > 1;
+  const pageEmptied = data && data.results.length === 0 && data.count > 0 && page > 1;
   useEffect(() => {
-    let ignore = false;
-    listSavedPeople().then(
-      (people) => !ignore && setState({ attempt, people, error: false }),
-      () => !ignore && setState({ attempt, people: null, error: true }),
-    );
-    return () => {
-      ignore = true;
-    };
-  }, [attempt]);
+    if (pageMissing) setPage(1, { replace: true });
+    else if (pageEmptied) setPage(page - 1, { replace: true });
+  }, [pageMissing, pageEmptied]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Снятый с закладки профиль сразу уходит из списка
-  function handleSavedChange(username, saved) {
-    if (saved) return;
-    setState((prev) => ({ ...prev, people: prev.people.filter((p) => p.username !== username) }));
-  }
-
-  const loading = state.attempt !== attempt;
-  const people = loading ? null : state.people;
-
-  let content = <PeopleGrid people={people} onSavedChange={handleSavedChange} />;
-  if (!loading && state.error) {
+  let content = (
+    <PeopleGrid
+      people={data?.results ?? null}
+      onSavedChange={(username, saved) => !saved && remove(username)}
+      onSavedRevert={(username) => restore(username)}
+    />
+  );
+  if (error && !pageMissing) {
     content = (
       <EmptyState
         title={texts.app.errorTitle}
-        action={<Button onClick={() => setAttempt((n) => n + 1)}>{texts.app.retry}</Button>}
+        description={apiErrorText(error)}
+        action={<Button onClick={retry}>{texts.app.retry}</Button>}
       />
     );
-  } else if (people?.length === 0) {
+  } else if (data && data.count === 0) {
     content = (
       <EmptyState
         icon={<Bookmark size={36} />}
@@ -62,6 +66,20 @@ export default function SavedPage() {
         <div aria-live="polite" aria-busy={loading}>
           {content}
         </div>
+        {data && data.count > 0 && (
+          <Pagination
+            page={page}
+            pageCount={data.pageCount}
+            onChange={(next) => {
+              setPage(next);
+              window.scrollTo({ top: 0 });
+            }}
+            label={texts.discover.pagination.label}
+            prevLabel={texts.discover.pagination.prev}
+            nextLabel={texts.discover.pagination.next}
+            pageLabel={texts.discover.pagination.page}
+          />
+        )}
       </MetaGate>
     </>
   );

@@ -6,10 +6,12 @@ from rest_framework.generics import ListAPIView
 from rest_framework.views import APIView
 
 from config.pagination import StandardPagination
-from config.throttles import BASE_THROTTLES, SearchThrottle
+from config.exceptions import CannotTargetSelf
+from config.throttles import BASE_THROTTLES, SavedThrottle, SearchThrottle
 
 from .meta import build_meta, meta_etag
-from .models import Profile
+from .models import Profile, SavedProfile
+from .saved import add_saved, is_saved, saved_list, saved_user_ids
 from .search import search_profiles, visible_profiles
 from .serializers import (
     CardSerializer,
@@ -113,6 +115,15 @@ class ProfileListView(ListAPIView):
     def get_queryset(self):
         return search_profiles(self.request.user, self.request.query_params)
 
+    def list(self, request, *args, **kwargs):
+        page = self.paginate_queryset(self.get_queryset())
+        # is_saved для всей страницы одним запросом (без N+1)
+        saved_ids = saved_user_ids(request.user, [profile.user_id for profile in page])
+        serializer = self.get_serializer(
+            page, many=True, context={**self.get_serializer_context(), "saved_ids": saved_ids}
+        )
+        return self.get_paginated_response(serializer.data)
+
 
 class ProfileDetailView(APIView):
     """GET /api/profiles/{username}/ — публичный профиль. 404, если человека нет, он забанен или не
@@ -122,4 +133,47 @@ class ProfileDetailView(APIView):
         profile = visible_profiles().filter(username=username.lower()).first()
         if profile is None:
             raise NotFound()
-        return Response(PublicProfileSerializer(profile).data)
+        saved_ids = {profile.user_id} if is_saved(request.user, profile.user_id) else set()
+        return Response(PublicProfileSerializer(profile, context={"saved_ids": saved_ids}).data)
+
+
+class SavedListView(ListAPIView):
+    """GET /api/saved/ — мои закладки (Card с is_saved=true), новые первыми. Забаненные, неактивные
+    и неподтверждённые пропадают; show_in_search=False закладку не скрывает."""
+
+    serializer_class = CardSerializer
+    pagination_class = StandardPagination
+    throttle_classes = BASE_THROTTLES
+
+    def get_queryset(self):
+        return saved_list(self.request.user)
+
+    def list(self, request, *args, **kwargs):
+        page = self.paginate_queryset(self.get_queryset())
+        profiles = [saved.saved_user.profile for saved in page]
+        serializer = CardSerializer(profiles, many=True, context={"all_saved": True})
+        return self.get_paginated_response(serializer.data)
+
+
+class SavedProfileView(APIView):
+    """PUT/DELETE /api/saved/{username}/ — добавить или убрать закладку (оба идемпотентны, 204)."""
+
+    throttle_classes = [*BASE_THROTTLES, SavedThrottle]
+
+    def put(self, request, username):
+        username = username.lower()
+        own = Profile.objects.filter(user=request.user).values_list("username", flat=True).first()
+        if username == own:
+            raise CannotTargetSelf()
+        target = visible_profiles().filter(username=username).first()
+        if target is None:
+            raise NotFound()  # нет такого, забанен, неактивен или не подтвердил почту
+        add_saved(request.user, target.user)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    def delete(self, request, username):
+        # Всегда 204: убрать закладку можно и на человека, который уже недоступен
+        SavedProfile.objects.filter(
+            owner=request.user, saved_user__profile__username=username.lower()
+        ).delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)

@@ -12,8 +12,9 @@ from .models import CONTACT_FIELDS
 class ProfileVisibility:
     """Публичное представление профиля с учётом приватности и возраста владельца."""
 
-    def __init__(self, profile):
+    def __init__(self, profile, is_saved=False):
         self.profile = profile
+        self.is_saved = is_saved  # сохранил ли профиль тот, кто смотрит
         self.is_minor = profile.is_minor()  # младше ADULT_AGE (18)
 
     # ── Имя ──
@@ -78,7 +79,7 @@ class ProfileVisibility:
             "country_label": location["country_label"],
             "bio": profile.bio,
             "interests": profile.interests,
-            "is_saved": False,  # избранное появится в B9
+            "is_saved": self.is_saved,
         }
 
     def public(self):

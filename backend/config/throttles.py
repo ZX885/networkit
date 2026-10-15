@@ -27,6 +27,12 @@ class SearchThrottle(SwitchableMixin, UserRateThrottle):
     scope = "search"
 
 
+class SavedThrottle(SwitchableMixin, UserRateThrottle):
+    """Добавление и удаление закладок: лимит на пользователя (scope saved)."""
+
+    scope = "saved"
+
+
 class IpThrottle(SwitchableMixin, SimpleRateThrottle):
     """Лимит по IP-адресу клиента (для входа, регистрации и т.п.)."""
 

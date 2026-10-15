@@ -85,7 +85,7 @@
 | owner | FK(User, CASCADE) | | O |
 | saved_user | FK(User, CASCADE) | `owner ≠ saved_user` (CheckConstraint) | O |
 | created_at | DateTime | | O |
-UNIQUE(owner, saved_user). Чужие закладки не видны никому (даже S — только в Admin).
+UNIQUE(owner, saved_user), индекс `(owner, -created_at)`. Чужие закладки не видны никому (даже S — только в Admin, только чтение). `related_name`: `saved_profiles` (у владельца), `saved_by` (у сохранённого). Лимит — `SAVED_MAX = 200` закладок на человека (настройка, в `/api/meta/` как `limits.saved_max`).
 
 ### 1.4 `profiles.Block`
 | Поле | Тип | Ограничения | Доступ |
@@ -216,6 +216,7 @@ UniqueConstraint(reporter, target) при `status=open` (нельзя спами
 | `email_flow` | 5/hour по IP и 5/day по email | `password-reset`, `resend-verification`, `email/change` |
 | `username_check` | 30/min | `username-available` |
 | `search` | 60/min | `GET /profiles/` |
+| `saved` | 60/min | `PUT/DELETE /saved/{username}/` |
 | `avatar` | 10/hour | `PUT /me/avatar/` |
 | `report` | 10/day | `POST /reports/` |
 | `message_request` | 10/day, ≤20 одновременно в `pending` | `POST /conversations/` |
@@ -245,7 +246,7 @@ UniqueConstraint(reporter, target) при `status=open` (нельзя спами
   "languages": [{"code": "uzbek", "label": "Uzbek"}],
   "goals": [{"code": "study_partners", "label": "Study partners"}],
   "report_reasons": [],
-  "limits": {"bio_max": 300, "min_age": 13, "adult_age": 18, "interests_max": 10, "languages_max": 10, "goals_max": 8}
+  "limits": {"bio_max": 300, "min_age": 13, "adult_age": 18, "interests_max": 10, "languages_max": 10, "goals_max": 8, "saved_max": 200}
 }
 ```
 Ответ публичный и кэшируемый (`Cache-Control: public, max-age=3600`, `ETag`, на `If-None-Match` — `304`). `report_reasons` пока пустой (жалобы появятся позже); остальные лимиты (`message_max`, `avatar_max_mb` и др.) добавятся вместе с соответствующими функциями.
@@ -341,8 +342,10 @@ UniqueConstraint(reporter, target) при `status=open` (нельзя спами
 - → пагинированный список Card.
 
 **GET `/api/profiles/{username}/`** — пользователь. Формат **Public** (§6.1): Card + `region`, `school`, `university`, `year_level`, `languages`, `goals`, `contacts`, `joined` (`"2026-09"`). Скрытое поле — `null`, а не пропуск (`contacts` — объект из пяти ключей либо `null`). 404, если профиля нет / он забанен / неактивен / не подтвердил почту. Профиль со `show_in_search=false` и свой собственный открываются по прямой ссылке (как в legacy). Поля `blocked_by_me` и `conversation` появятся вместе с блокировками и диалогами (B6, B9); `is_saved` пока всегда `false`.
-**GET `/api/saved/`** — пользователь → пагинированные Card (`is_saved=true`); исчезнувшие/забаненные/заблокированные скрываются.
-**PUT `/api/saved/{username}/`** → `204` (идемпотентно); на себя — 400 `cannot_target_self`; цель не найдена/недоступна — 404. **DELETE** → `204` (идемпотентно).
+**GET `/api/saved/`** — пользователь → пагинированные Card (как в поиске: те же поля и правила приватности, `is_saved=true`). Новые закладки первыми. Забаненные, неактивные и неподтверждённые пропадают (и возвращаются после разбана); `show_in_search=false` закладку **не** скрывает.
+**PUT `/api/saved/{username}/`** → `204`, идемпотентно (повтор уже сохранённого ничего не меняет и не проверяет лимит). Свой username — 400 `cannot_target_self`; нет такого, забанен, неактивен, не подтвердил почту или нет профиля — 404 `not_found`. Больше `SAVED_MAX` (200) видимых закладок — 409 `saved_limit_reached`. Проверка лимита и вставка идут в одной транзакции под блокировкой строки владельца, параллельные запросы лимит не обходят. Считаются только видимые закладки (как в списке: скрытые из списка нельзя было бы убрать).
+**DELETE `/api/saved/{username}/`** → `204` всегда (даже если закладки не было и даже для недоступного или неизвестного username: убрать закладку можно всегда).
+`is_saved` в Card (поиск) и Public считается по данным текущего пользователя: один запрос на страницу списка, один `exists()` в профиле; закладки других людей на него не влияют; у своего профиля — `false`.
 
 ### 3.7 Блокировки и жалобы
 | Метод | URL | Доступ | Тело | Ответ |

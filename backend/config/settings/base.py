@@ -89,6 +89,9 @@ MIN_AGE = 13
 ADULT_AGE = 18
 MAX_AGE = 100
 
+# Сколько профилей человек может сохранить в избранное (отдаётся клиенту в /api/meta/ limits.saved_max)
+SAVED_MAX = 200
+
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -185,6 +188,7 @@ THROTTLE_RATES = {
     "register": "5/hour",  # регистрация и повторная отправка письма
     "username_check": "30/min",
     "search": "60/min",  # GET /api/profiles/ на пользователя
+    "saved": "60/min",  # PUT/DELETE /api/saved/{username}/ на пользователя
 }
 # Выключатель лимитов (в тестах выключены, отдельные тесты включают)
 THROTTLING_ENABLED = env.bool("THROTTLING_ENABLED", default=not TESTING)

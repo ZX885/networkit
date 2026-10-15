@@ -1,25 +1,26 @@
-import { Bookmark, MessageCircle } from 'lucide-react';
+import { Bookmark } from 'lucide-react';
 import useMeta from '../../api/useMeta.js';
 import { formatPlace, fullName, labelOf } from '../../lib/labels.js';
 import { texts } from '../../texts/en.js';
 import Avatar from '../ui/Avatar.jsx';
-import Button from '../ui/Button.jsx';
 import ButtonLink from '../ui/ButtonLink.jsx';
 import Tag from '../ui/Tag.jsx';
-import useToast from '../ui/useToast.js';
+import useSavedToggle from './useSavedToggle.js';
 import styles from './PersonCard.module.css';
 
 const t = texts.card;
 const MAX_TAGS = 3;
 
 // Карточка человека (legacy .rc) в Discover и Saved. person — формат Card (docs/SPEC.md §3.6);
-// city/country могут быть null (скрыты приватностью). «Message» и закладка пока без функции:
-// тост «Coming soon» (подключим в B6/B7 и B9).
-export default function PersonCard({ person }) {
+// city/country могут быть null (скрыты приватностью). Закладка — настоящая (aria-pressed): состояние
+// меняется сразу и откатывается при ошибке; onSavedChange/onSavedRevert сообщают список (Saved).
+export default function PersonCard({ person, onSavedChange, onSavedRevert }) {
   const name = fullName(person);
   const { meta } = useMeta(); // карточки показываются после загрузки справочников (MetaGate)
-  const showToast = useToast();
-  const comingSoon = () => showToast(texts.app.comingSoon);
+  const { saved, busy, toggle } = useSavedToggle(person.username, person.is_saved, {
+    onChange: (next) => onSavedChange?.(person.username, next),
+    onRevert: (previous) => onSavedRevert?.(person.username, previous),
+  });
   const place = [formatPlace(person, meta.countries), labelOf(meta.statuses, person.status)]
     .filter(Boolean)
     .join(' · ');
@@ -49,17 +50,15 @@ export default function PersonCard({ person }) {
         <ButtonLink to={`/u/${person.username}`} size="sm" className={styles.view}>
           {t.viewProfile}
         </ButtonLink>
-        <Button variant="ghost" size="sm" aria-label={t.messageLabel(name)} onClick={comingSoon}>
-          <MessageCircle size={14} aria-hidden="true" />
-          {t.message}
-        </Button>
         <button
           type="button"
-          className={styles.bookmark}
-          aria-label={t.save(name)}
-          onClick={comingSoon}
+          className={[styles.bookmark, saved && styles.bookmarked].filter(Boolean).join(' ')}
+          aria-pressed={saved}
+          aria-label={saved ? t.unsave(name) : t.save(name)}
+          disabled={busy}
+          onClick={toggle}
         >
-          <Bookmark size={16} aria-hidden="true" />
+          <Bookmark size={16} fill={saved ? 'currentColor' : 'none'} aria-hidden="true" />
         </button>
       </div>
     </article>

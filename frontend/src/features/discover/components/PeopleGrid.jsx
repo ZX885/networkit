@@ -5,7 +5,7 @@ const SKELETON_COUNT = 6;
 
 // Сетка карточек (legacy .rg-grid). Пока данные грузятся (people = null), показывает скелетоны.
 // onSavedChange передаётся дальше в карточку (Saved убирает снятые с закладки).
-export default function PeopleGrid({ people, onSavedChange }) {
+export default function PeopleGrid({ people, onSavedChange, onSavedRevert }) {
   if (!people) {
     return (
       <div className={styles.grid} aria-hidden="true">
@@ -19,7 +19,12 @@ export default function PeopleGrid({ people, onSavedChange }) {
   return (
     <div className={styles.grid}>
       {people.map((person) => (
-        <PersonCard key={person.username} person={person} onSavedChange={onSavedChange} />
+        <PersonCard
+          key={person.username}
+          person={person}
+          onSavedChange={onSavedChange}
+          onSavedRevert={onSavedRevert}
+        />
       ))}
     </div>
   );
