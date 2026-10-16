@@ -48,7 +48,24 @@ CITIES = {
 }
 OTHER_COUNTRIES = ["KZ", "KG", "TR", "DE", "FR", "BR", "IN"]
 # Города Узбекистана вне справочника (в форме это вариант «Other»)
-UZ_OTHER_CITIES = ["Zomin", "Chust", "Kitab", "Yangiyer"]
+UZ_OTHER_CITIES = [
+    "Zomin",
+    "Chust",
+    "Kitab",
+    "Yangiyer",
+    "Khiva",
+    "Kokand",
+    "Margilan",
+    "Chirchiq",
+    "Angren",
+    "Almalyk",
+    "Bekabad",
+    "Zarafshan",
+    "Shahrisabz",
+    "Denau",
+    "Asaka",
+    "Gulistan",
+]
 UNIVERSITIES = ["WIUT", "TSUL", "SamSU", "AUCA", "Nazarbayev University", "TU Berlin", "METU"]
 SCHOOLS = ["Lyceum 5", "School 110", "Presidential School", "IT Lyceum", "Gymnasium 3"]
 YEAR_LEVELS_STUDENT = ["1st year", "2nd year", "3rd year", "4th year", "Master 1st year"]
