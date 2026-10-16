@@ -4,6 +4,8 @@
 from django.db.models import Case, Count, F, IntegerField, OuterRef, Q, Subquery, Value, When
 from django.db.models.functions import Coalesce
 
+from apps.moderation.rules import blocked_pair, hidden_by_me
+
 from .models import Conversation, Message
 
 Status = Conversation.Status
@@ -18,8 +20,9 @@ def _partner_is_visible(user):
 
 
 def participant_conversations(user):
-    """Диалоги, в которых участвует user и собеседник которых виден."""
-    return Conversation.objects.filter(_partner_is_visible(user))
+    """Диалоги, в которых участвует user и собеседник которых виден. Диалоги с человеком, которого
+    user заблокировал, скрыты; у заблокированного диалог остаётся (он не должен узнать о блокировке)."""
+    return Conversation.objects.filter(_partner_is_visible(user)).filter(~hidden_by_me(user))
 
 
 def annotated(user, queryset=None):
@@ -70,5 +73,11 @@ def summary(user):
         .exclude(sender=user)
         .count()
     )
-    pending = visible.filter(status=Status.PENDING).exclude(initiator=user).count()
+    # Запросы от/к заблокированному (в любую сторону) в счётчик не попадают
+    pending = (
+        visible.filter(status=Status.PENDING)
+        .exclude(initiator=user)
+        .filter(~blocked_pair())
+        .count()
+    )
     return {"unread_messages": unread, "pending_requests": pending}

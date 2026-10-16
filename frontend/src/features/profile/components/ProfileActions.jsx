@@ -1,6 +1,9 @@
 import { Bookmark } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import useAuth from '../../../app/providers/useAuth.js';
 import Button from '../../../components/ui/Button.jsx';
 import useSavedToggle from '../../../components/shared/useSavedToggle.js';
+import ReportBlockMenu from '../../moderation/components/ReportBlockMenu.jsx';
 import MessageRequestButton from '../../messages/components/MessageRequestButton.jsx';
 import { texts } from '../../../texts/en.js';
 
@@ -10,14 +13,23 @@ const t = texts.profile;
 // и откатывается при ошибке (в том числе при лимите закладок).
 export default function ProfileActions({ profile }) {
   const { saved, busy, toggle } = useSavedToggle(profile.username, profile.is_saved);
+  const { user } = useAuth();
+  const navigate = useNavigate();
 
   return (
     <>
-      <MessageRequestButton person={profile} />
+      {profile.username !== user.username && <MessageRequestButton person={profile} />}
       <Button variant="ghost" size="sm" aria-pressed={saved} loading={busy} onClick={toggle}>
         <Bookmark size={14} fill={saved ? 'currentColor' : 'none'} aria-hidden="true" />
         {saved ? t.saved : t.save}
       </Button>
+      {profile.username !== user.username && (
+        // После блокировки профиль для вас недоступен: уходим в Discover
+        <ReportBlockMenu
+          person={profile}
+          onBlocked={() => navigate('/discover', { replace: true })}
+        />
+      )}
     </>
   );
 }

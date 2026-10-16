@@ -4,6 +4,7 @@
 from django.conf import settings
 from django.db import transaction
 
+from apps.moderation.rules import exclude_blocked
 from apps.users.models import User
 from config.exceptions import SavedLimitReached
 
@@ -30,7 +31,7 @@ def saved_list(owner):
     """Закладки владельца для списка: сохранённый человек виден всем (активен, не забанен,
     почта подтверждена, профиль есть). show_in_search=False закладку НЕ скрывает.
     Новые закладки первыми; профиль подтягивается одним запросом."""
-    return (
+    queryset = (
         SavedProfile.objects.filter(
             owner=owner,
             saved_user__is_active=True,
@@ -41,6 +42,7 @@ def saved_list(owner):
         .select_related("saved_user__profile")
         .order_by("-created_at", "-id")
     )
+    return exclude_blocked(queryset, owner, "saved_user_id")  # блокировка в любую сторону
 
 
 def add_saved(owner, target_user):

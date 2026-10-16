@@ -51,6 +51,18 @@ class MessageSendDayThrottle(SwitchableMixin, UserRateThrottle):
     scope = "message_send_day"
 
 
+class BlockThrottle(SwitchableMixin, UserRateThrottle):
+    """Блокировка и разблокировка (scope block)."""
+
+    scope = "block"
+
+
+class ReportThrottle(SwitchableMixin, UserRateThrottle):
+    """Жалобы (scope report)."""
+
+    scope = "report"
+
+
 class IpThrottle(SwitchableMixin, SimpleRateThrottle):
     """Лимит по IP-адресу клиента (для входа, регистрации и т.п.)."""
 

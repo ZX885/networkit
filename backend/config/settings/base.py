@@ -79,6 +79,7 @@ INSTALLED_APPS = [
     "apps.users",
     "apps.profiles",
     "apps.messaging",
+    "apps.moderation",
 ]
 
 # Своя модель пользователя (вход по email). Должна быть задана до первой миграции.
@@ -99,6 +100,10 @@ MESSAGE_MAX = 4000
 REQUEST_MAX = 500  # первое сообщение вместе с запросом на переписку
 PENDING_REQUESTS_MAX = 20
 DECLINED_COUNTS_DAYS = 7
+
+# Модерация: сколько людей можно заблокировать и длина текста жалобы (оба числа отдаются в /api/meta/)
+BLOCKS_MAX = 200
+REPORT_DETAILS_MAX = 1000
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -200,6 +205,8 @@ THROTTLE_RATES = {
     "message_request": "10/day",  # новые запросы на переписку
     "message_send": "30/min",  # сообщения в диалогах
     "message_send_day": "500/day",
+    "block": "30/hour",  # PUT/DELETE /api/blocks/{username}/ на пользователя
+    "report": "10/day",  # POST /api/reports/ на пользователя
 }
 # Выключатель лимитов (в тестах выключены, отдельные тесты включают)
 THROTTLING_ENABLED = env.bool("THROTTLING_ENABLED", default=not TESTING)

@@ -5,6 +5,7 @@ import PublicLayout from '../components/layout/PublicLayout.jsx';
 import GuestRoute from './routes/GuestRoute.jsx';
 import NotFoundRoute from './routes/NotFoundRoute.jsx';
 import ProtectedRoute from './routes/ProtectedRoute.jsx';
+import BlockedTab from '../features/settings/components/BlockedTab.jsx';
 import AccountTab from '../features/settings/components/AccountTab.jsx';
 import PrivacyTab from '../features/settings/components/PrivacyTab.jsx';
 import ComingSoonPage from '../pages/ComingSoonPage.jsx';
@@ -74,6 +75,7 @@ export default function AppRouter() {
               <Route index element={<Navigate to="account" replace />} />
               <Route path="account" element={<AccountTab />} />
               <Route path="privacy" element={<PrivacyTab />} />
+              <Route path="blocked" element={<BlockedTab />} />
             </Route>
           </Route>
           <Route path="*" element={<NotFoundRoute />} />

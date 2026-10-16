@@ -6,6 +6,8 @@ import json
 
 from django.conf import settings
 
+from apps.moderation.choices import REPORT_REASONS
+
 from . import choices
 from .models import BIO_MAX, GOALS_MAX, INTERESTS_MAX, LANGUAGES_MAX
 
@@ -21,7 +23,7 @@ def build_meta():
         "goals": choices.as_options(choices.GOALS),
         "cities": choices.as_options(choices.UZ_CITIES),  # города страны country_cities_default
         "country_cities_default": choices.COUNTRY_CITIES_DEFAULT,
-        "report_reasons": [],  # жалобы появятся позже (шаг про Report)
+        "report_reasons": choices.as_options(REPORT_REASONS),
         "limits": {
             "bio_max": BIO_MAX,
             "min_age": settings.MIN_AGE,
@@ -32,6 +34,8 @@ def build_meta():
             "saved_max": settings.SAVED_MAX,
             "message_max": settings.MESSAGE_MAX,
             "request_max": settings.REQUEST_MAX,
+            "blocks_max": settings.BLOCKS_MAX,
+            "details_max": settings.REPORT_DETAILS_MAX,
         },
     }
 

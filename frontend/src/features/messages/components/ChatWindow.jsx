@@ -1,10 +1,11 @@
 import { ChevronLeft } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import Avatar from '../../../components/ui/Avatar.jsx';
 import Button from '../../../components/ui/Button.jsx';
 import Spinner from '../../../components/ui/Spinner.jsx';
 import { fullName } from '../../../lib/labels.js';
 import { texts } from '../../../texts/en.js';
+import ReportBlockMenu from '../../moderation/components/ReportBlockMenu.jsx';
 import ChatMessages from './ChatMessages.jsx';
 import MessageInput from './MessageInput.jsx';
 import RequestBar from './RequestBar.jsx';
@@ -19,6 +20,7 @@ const t = texts.messages;
 // onDecided(conversation) — получатель принял / отклонил запрос.
 export default function ChatWindow({ conversationId, maxLength, onChanged, onDecided }) {
   const chat = useChat(conversationId, onChanged);
+  const navigate = useNavigate();
   const { status, conversation } = chat;
 
   if (status !== 'ready') {
@@ -78,6 +80,15 @@ export default function ChatWindow({ conversationId, maxLength, onChanged, onDec
         <Link to={`/u/${user.username}`} className={styles.profile}>
           {t.viewProfile}
         </Link>
+        <ReportBlockMenu
+          person={user}
+          conversationId={conversationId}
+          onBlocked={() => {
+            // Диалог у блокирующего исчезает: возвращаемся к списку и обновляем счётчики
+            onChanged?.();
+            navigate('/messages', { replace: true });
+          }}
+        />
       </header>
       <ChatMessages
         conversationId={conversationId}

@@ -379,6 +379,9 @@ export const texts = {
     loadingList: 'Loading people',
     emptyTitle: 'No people found',
     emptyText: 'Try a different search or clear the filters.',
+    filterGoneTitle: 'This filter is no longer available',
+    filterGoneText: 'Clear the filters and try again.',
+    clearFilters: 'Clear filters',
     pagination: {
       label: 'Pagination',
       prev: 'Previous page',
@@ -482,13 +485,24 @@ export const texts = {
   settings: {
     title: 'Settings',
     navLabel: 'Settings sections',
-    tabs: { account: 'Account', privacy: 'Privacy' },
+    tabs: { account: 'Account', privacy: 'Privacy', blocked: 'Blocked users' },
     account: {
       title: 'Account settings',
       subtitle: 'Your display name and username.',
       displayName: 'Display name',
       username: 'Username',
       readOnly: "Can't be changed in this version",
+    },
+    blocked: {
+      title: 'Blocked users',
+      subtitle:
+        "People you block won't appear in your search, and you won't see their profile. You can unblock them at any time.",
+      listLabel: 'Blocked users',
+      emptyTitle: 'No blocked users',
+      emptyText: 'People you block will appear here.',
+      unblock: 'Unblock',
+      unblockLabel: (name) => `Unblock ${name}`,
+      unblockedToast: (name) => `${name} was unblocked`,
     },
     privacy: {
       title: 'Privacy settings',
@@ -515,7 +529,37 @@ export const texts = {
     otherPlaceholder: 'Type your city',
   },
 
-  // Сообщения (шаг B7): пока заглушка
+  // Жалобы и блокировка (шаг B9). Заблокированному ничего не показываем: тексты только для того, кто блокирует
+  moderation: {
+    menuLabel: (name) => `More actions for ${name}`,
+    report: 'Report',
+    block: 'Block',
+    reportTitle: (name) => `Report ${name}`,
+    reportIntro: 'Tell us what is wrong. Our team will review your report.',
+    reportConversationNote: 'Our team may read this conversation to review your report.',
+    reasonLabel: 'Reason',
+    reasonPlaceholder: 'Select a reason',
+    detailsLabel: 'Details',
+    detailsOptional: '(optional)',
+    detailsPlaceholder: 'Add anything that helps us understand',
+    counter: (length, max) => `${length}/${max}`,
+    send: 'Send report',
+    cancel: 'Cancel',
+    close: 'Close',
+    thanks: "Thank you, we'll review your report",
+    blockTitle: (name) => `Block ${name}?`,
+    blockText:
+      "They won't be able to find you, and you won't see their profile. You can unblock them at any time in Settings.",
+    blockConfirm: 'Block',
+    blockedToast: (name) => `You blocked ${name}`,
+    errors: {
+      chooseReason: 'Please choose a reason',
+      tooLong: (max) => `Use at most ${max} characters`,
+      notAvailable: "This person isn't available",
+    },
+  },
+
+  // Сообщения (шаг B7)
   messages: {
     title: 'Messages',
     tabsLabel: 'Conversation folders',
@@ -638,6 +682,8 @@ export const texts = {
       'You have too many requests waiting for a reply. Try again after some of them are answered',
     accept_required: 'Accept the message request first',
     conversation_closed: "You can't send messages to this person",
+    blocks_limit_reached:
+      'You have reached the limit of blocked people. Unblock someone in Settings first',
     cannot_target_self: "You can't do this with your own profile",
     saved_limit_reached: 'You have reached the limit of saved profiles',
     not_allowed_for_minors: 'Contact links are available from age 18',

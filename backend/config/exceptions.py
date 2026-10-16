@@ -49,6 +49,12 @@ class SavedLimitReached(_ApiError):
     default_detail = "You have reached the limit of saved profiles."
 
 
+class BlocksLimitReached(_ApiError):
+    status_code = status.HTTP_409_CONFLICT
+    default_code = "blocks_limit_reached"
+    default_detail = "You have reached the limit of blocked people."
+
+
 class ConversationExists(_ApiError):
     status_code = status.HTTP_409_CONFLICT
     default_code = "conversation_exists"
@@ -161,9 +167,9 @@ def _collect(detail, path, fields, non_field):
         non_field.append(_entry(detail))
 
 
-# Сообщения людей нельзя выводить в логи: ошибки БД содержат строку целиком («Failing row contains …»),
+# Сообщения людей и тексты жалоб нельзя выводить в логи: ошибки БД содержат строку целиком («Failing row contains …»),
 # а у исключений из текста сообщения бывает текст в самом сообщении об ошибке.
-PRIVATE_PATH_PREFIXES = ("/api/conversations/",)
+PRIVATE_PATH_PREFIXES = ("/api/conversations/", "/api/reports/", "/api/blocks/")
 
 
 class RedactedError(Exception):

@@ -87,26 +87,28 @@
 | created_at | DateTime | | O |
 UNIQUE(owner, saved_user), индекс `(owner, -created_at)`. Чужие закладки не видны никому (даже S — только в Admin, только чтение). `related_name`: `saved_profiles` (у владельца), `saved_by` (у сохранённого). Лимит — `SAVED_MAX = 200` закладок на человека (настройка, в `/api/meta/` как `limits.saved_max`).
 
-### 1.4 `profiles.Block`
+### 1.4 `moderation.Block`
+Приложение `apps/moderation` (а не `profiles`): блокировки и жалобы затрагивают поиск, избранное, диалоги и админку, а отдельное приложение не создаёт циклов импорта (`profiles` и `messaging` импортируют только `moderation/rules.py`).
 | Поле | Тип | Ограничения | Доступ |
 |---|---|---|---|
-| blocker | FK(User, CASCADE) | | O |
-| blocked | FK(User, CASCADE) | `blocker ≠ blocked` | O (blocker видит список) |
+| blocker | FK(User, CASCADE), `related_name="blocks_made"` | | O |
+| blocked | FK(User, CASCADE), `related_name="blocks_received"` | `blocker ≠ blocked` (CheckConstraint) | O (blocker видит список) |
 | created_at | DateTime | | |
-UNIQUE(blocker, blocked). Блокируемый список/факт блокировки **не видит** (§7.4).
+UNIQUE(blocker, blocked), индексы `(blocked, blocker)` и `(blocker, -created_at)`. Блокировка действует **в обе стороны**; блокируемый список и факт блокировки **не видит** (§7.2, §7.4). Лимит — `BLOCKS_MAX = 200` блокировок на человека (настройка, в `/api/meta/` как `limits.blocks_max`).
 
-### 1.5 `profiles.Report`
+### 1.5 `moderation.Report`
 | Поле | Тип | Ограничения | Чтение | Запись |
 |---|---|---|---|---|
 | reporter | FK(User, SET_NULL) null | | S | создаётся API |
-| target | FK(User, CASCADE) | `≠ reporter` | S | API |
+| target | FK(User, CASCADE), `related_name="reports_received"` | `≠ reporter` (CheckConstraint) | S | API |
+| conversation | FK(messaging.Conversation, SET_NULL) null | жалоба на диалог: ссылка, а не копия текста | S | API |
 | reason | CharField(20) | `fake_profile, spam, inappropriate, harassment, underage, other` | S | API |
-| details | CharField(1000) blank | ≤1000 | S | API |
+| details | CharField(1000) blank | ≤1000 (`limits.details_max`) | S | API |
 | status | CharField(12) | `open, dismissed, actioned`, default `open` | S | S |
 | staff_note | CharField(500) blank | | S | S |
-| handled_by | FK(User, SET_NULL) null; handled_at DateTime null | | S | S |
+| handled_by | FK(User, SET_NULL) null; handled_at DateTime null | ставятся автоматически при смене статуса | S | sys |
 | created_at | DateTime | | S | sys |
-UniqueConstraint(reporter, target) при `status=open` (нельзя спамить повторными жалобами). Пользователь отправленные жалобы не читает.
+UniqueConstraint(reporter, target) при `status=open` (нельзя спамить повторными жалобами). Пользователь отправленные жалобы не читает. Читать жалобы (включая текст) могут только суперпользователи (§3.14).
 
 ### 1.6 `messaging.Conversation`
 | Поле | Тип | Ограничения | Доступ |
@@ -251,7 +253,7 @@ UniqueConstraint(reporter, target) при `status=open` (нельзя спами
   "limits": {"bio_max": 300, "min_age": 13, "adult_age": 18, "interests_max": 10, "languages_max": 10, "goals_max": 8, "saved_max": 200, "message_max": 4000, "request_max": 500}
 }
 ```
-`cities` — справочник городов Узбекистана (12 городов, `profiles/choices.py: UZ_CITIES`; код — название в нижнем регистре, метка — английское название), `country_cities_default` — страна, для которой клиент показывает этот список. «Other» в справочник не входит (это вариант интерфейса: свободный текст). Ответ публичный и кэшируемый (`Cache-Control: public, max-age=3600`, `ETag`, на `If-None-Match` — `304`). `report_reasons` пока пустой (жалобы появятся позже); остальные лимиты (`message_max`, `avatar_max_mb` и др.) добавятся вместе с соответствующими функциями.
+`cities` — справочник городов Узбекистана (12 городов, `profiles/choices.py: UZ_CITIES`; код — название в нижнем регистре, метка — английское название), `country_cities_default` — страна, для которой клиент показывает этот список. «Other» в справочник не входит (это вариант интерфейса: свободный текст). Ответ публичный и кэшируемый (`Cache-Control: public, max-age=3600`, `ETag`, на `If-None-Match` — `304`). `report_reasons` — причины жалоб (`[{code, label}]`: `fake_profile, spam, inappropriate, harassment, underage, other`), `limits.blocks_max` (200) и `limits.details_max` (1000); остальные лимиты (`message_max`, `avatar_max_mb` и др.) добавятся вместе с соответствующими функциями.
 `GET /api/stats/` → `{"members": 120, "fields": 14, "countries": 6}` (считаются только подтверждённые, не забаненные профили; клиент округляет для показа, как в legacy `updateHeroStats`).
 
 ### 3.2 Регистрация и подтверждение почты
@@ -353,10 +355,16 @@ UniqueConstraint(reporter, target) при `status=open` (нельзя спами
 ### 3.7 Блокировки и жалобы
 | Метод | URL | Доступ | Тело | Ответ |
 |---|---|---|---|---|
-| GET | `/api/blocks/` | пользователь | — | пагинированные мини-карточки `{username, first_name, last_name, avatar_url}` |
-| PUT | `/api/blocks/{username}/` | пользователь | — | `204`; на себя — 400 `cannot_target_self`; идемпотентно |
-| DELETE | `/api/blocks/{username}/` | пользователь | — | `204` |
-| POST | `/api/reports/` | пользователь | `{"username","reason","details"}` | `201 {"status":"received"}`; дубль открытой жалобы — тоже `201` (без раскрытия); на себя — 400 |
+| GET | `/api/blocks/` | пользователь | — | пагинированные мини-карточки `{username, first_name, last_name, avatar_url}` (только те, кого заблокировал я; новые первыми) |
+| PUT | `/api/blocks/{username}/` | пользователь | — | `204`; идемпотентно; на себя — 400 `cannot_target_self`; нет такого, забанен или не подтвердил почту — 404; сверх лимита — 409 `blocks_limit_reached`. Заблокировать того, кто заблокировал вас, можно: ответ тот же |
+| DELETE | `/api/blocks/{username}/` | пользователь | — | `204` всегда (идемпотентно, в том числе для недоступного человека) |
+| POST | `/api/reports/` | пользователь | `{"username","reason","details","conversation_id"?}` | `201 {"status":"received"}`; дубль открытой жалобы — тоже `201` (без раскрытия; если в дубле есть `conversation_id`, он дописывается к открытой жалобе); на себя — 400 `cannot_target_self`; неизвестный человек — 404; `reason` не из справочника — 400 `invalid_choice`; `details` > 1000 — 400 `too_long`; `conversation_id` чужого диалога, диалога с другим человеком или неверный — 404 |
+
+Лимиты запросов: блокировки (PUT и DELETE вместе) — 30 в час на пользователя (scope `block`); жалобы — 10 в сутки (scope `report`). Причины жалоб (`report_reasons`) и числа `limits.blocks_max`, `limits.details_max` приходят из `/api/meta/`. Тексты жалоб и сообщений не попадают в логи и трейсбеки: ошибки по `/api/reports/`, `/api/blocks/` и `/api/conversations/` логируются без текста исключения (`config/exceptions.py`).
+
+**Действие блокировки.** Все проверки собраны в `apps/moderation/rules.py` (`are_blocked`, `exclude_blocked`, `hidden_by_me`, `blocked_pair` — подзапросы `Exists`, число SQL-запросов не зависит от числа блокировок). При блокировке в **любую** сторону: человека нет в `GET /api/profiles/` и `GET /api/saved/` (закладка остаётся в базе и возвращается после разблокировки), `GET /api/profiles/{username}/` и `PUT /api/saved/{username}/` отвечают 404, `POST /api/conversations/` — 404 («такого человека нет»: проверка стоит раньше «диалог уже есть»). Диалоги — §7.2.
+
+**Жалоба.** Пожаловаться можно на любого человека с профилем и активным аккаунтом, в том числе на заблокировавшего вас и на забаненного (иначе ответ раскрыл бы блокировку или бан). Жалоба на диалог прикрепляет ссылку на диалог (не копию текста): суперпользователь открывает переписку в админке (только чтение).
 
 ### 3.8 Диалоги (запросы на переписку)
 Формат **Conversation** (все поля всегда есть; ничего лишнего: нет email, даты рождения и т.п.):
@@ -409,7 +417,12 @@ UniqueConstraint(reporter, target) при `status=open` (нельзя спами
 PUT/DELETE избранного и блокировок идемпотентны. `POST …/messages/` не идемпотентен; фронтенд блокирует кнопку до ответа (исправление F-8 из ANALYSIS).
 
 ### 3.14 Django Admin (staff)
-Модели: User (бан/разбан, сброс `email_verified_at`; действие «Ban» ставит `is_banned`, `banned_at` и удаляет сессии пользователя), Profile (просмотр, без DOB в списке), Report (фильтр по `status`, действия «Dismiss»/«Mark actioned», поле `staff_note`), Block/SavedProfile (только чтение). `Message` и `Conversation` в Admin не регистрируются (Q-7).
+Модели: User (бан/разбан, сброс `email_verified_at`; действие «Ban» ставит `is_banned`, `banned_at` и удаляет сессии пользователя; колонка «Open reports» — число открытых жалоб на человека, один запрос с агрегатом, без N+1), Profile (просмотр, без DOB в списке), SavedProfile (только чтение). `Conversation`/`Message` — только чтение и только для суперпользователей (§1.7).
+
+**Модерация (`apps/moderation`) — только суперпользователи** (обычный staff модуль не видит, права через `user_permissions` не помогают):
+- `Report`: список сначала жалобы `underage` и `harassment`, затем остальные, внутри группы новые первыми; фильтры «priority» (urgent/other), `status`, `reason`; поиск по email и username цели и автора; колонка «Open on this person» — число открытых жалоб на ту же цель. Текст жалобы, автор, цель и причина **не редактируются**; меняются только `status` и `staff_note`, а `handled_by`/`handled_at` ставятся автоматически (при возврате в `open` очищаются). В карточке: число открытых жалоб на цель и список других жалоб на неё — только дата, причина и статус (без чужих текстов и авторов); ссылка на диалог (только чтение). Действия: «Mark dismissed», «Mark actioned», «Ban target user» (ставит `is_banned`/`banned_at` на цели, завершает её сессии, жалобы → `actioned`; суперпользователей не банит). Добавлять и удалять жалобы нельзя.
+- `Block`: только чтение.
+Просмотр жалоб не пишет `LogEntry`.
 
 ---
 
@@ -516,8 +529,8 @@ PUT/DELETE избранного и блокировок идемпотентны
 ### 7.2 Что видит каждый (маскирование)
 - **Получатель:** `pending` → вкладка `requests`; после `decline` — диалог из списков исчезает.
 - **Инициатор:** `pending` и `declined` показываются одинаково как `pending` («Request sent»). Это защита от навязчивости: отказ не сообщается. Повторный запрос тому же человеку после отказа невозможен (409 `request_pending`).
-- **Заблокированный:** диалог остаётся в списке без изменений, но отправка → 403 `conversation_closed`; в поиске и по прямой ссылке профиль заблокировавшего недоступен (404).
-- **Блокирующий:** диалог исчезает из всех `box`; список заблокированных — `GET /blocks/`. После `DELETE /blocks/{username}/` диалог возвращается в прежнем статусе.
+- **Заблокированный:** диалог остаётся в списке без изменений (в том числе непрочитанные и `status`), историю открыть можно, но отправка → 403 `conversation_closed` (нейтральный текст, о блокировке ничего не сказано); `accept`/`decline` → тоже 403 `conversation_closed`. Профиль заблокировавшего недоступен (404) и в поиске его нет. Счётчик `pending_requests` в `summary` не учитывает запросы от/к заблокированному в обе стороны (в списке `requests` запрос остаётся).
+- **Блокирующий:** диалог исчезает из всех `box`, из `summary` и по прямой ссылке (404); список заблокированных — `GET /blocks/`. После `DELETE /blocks/{username}/` диалог возвращается в прежнем статусе (сама блокировка не меняет `status`, `unread`, закладки).
 - Забаненный собеседник: диалог скрыт у другой стороны, сообщения сохраняются.
 
 ### 7.3 Таблица «кто и что может отправить»
@@ -527,7 +540,7 @@ PUT/DELETE избранного и блокировок идемпотентны
 | `pending` | 409 `request_pending` | `accept` / `decline` / блок / жалоба; сообщение → 403 `accept_required` |
 | `accepted` | ✅ | ✅ |
 | `declined` | 409 `request_pending` (маскирование: неотличимо от `pending`) | 403 `conversation_closed` (нейтральный текст) |
-| Блокировка (любая сторона) | 403 `conversation_closed` | 403 `conversation_closed` |
+| Блокировка | заблокированному — 403 `conversation_closed`; блокирующему диалог недоступен (404, §7.2) | то же |
 
 ### 7.4 Остальные правила
 - Одна пара пользователей — максимум один диалог (UNIQUE `user_a<user_b`).

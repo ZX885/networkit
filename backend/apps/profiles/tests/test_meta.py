@@ -28,7 +28,7 @@ class MetaTests(APITestCase):
                 "limits",
             },
         )
-        self.assertEqual(data["report_reasons"], [])
+        self.assertEqual(len(data["report_reasons"]), 6)  # причины жалоб: подробнее в moderation/tests
 
     def test_items_are_code_label_pairs_from_choices(self):
         data = self.client.get(META).json()
@@ -60,6 +60,8 @@ class MetaTests(APITestCase):
                 "saved_max": settings.SAVED_MAX,
                 "message_max": 4000,
                 "request_max": 500,
+                "blocks_max": 200,
+                "details_max": 1000,
             },
         )
         self.assertEqual((limits["min_age"], limits["adult_age"]), (13, 18))

@@ -5,6 +5,7 @@ from rest_framework.response import Response
 from rest_framework.generics import ListAPIView
 from rest_framework.views import APIView
 
+from apps.moderation.rules import exclude_blocked
 from config.pagination import StandardPagination
 from config.exceptions import CannotTargetSelf
 from config.throttles import BASE_THROTTLES, SavedThrottle, SearchThrottle
@@ -130,9 +131,10 @@ class ProfileDetailView(APIView):
     подтвердил почту. Профиль со show_in_search=False и свой собственный открываются."""
 
     def get(self, request, username):
-        profile = visible_profiles().filter(username=username.lower()).first()
+        profiles = exclude_blocked(visible_profiles(), request.user, "user_id")
+        profile = profiles.filter(username=username.lower()).first()
         if profile is None:
-            raise NotFound()
+            raise NotFound()  # нет такого, забанен или есть блокировка в любую сторону
         saved_ids = {profile.user_id} if is_saved(request.user, profile.user_id) else set()
         return Response(PublicProfileSerializer(profile, context={"saved_ids": saved_ids}).data)
 
@@ -165,9 +167,10 @@ class SavedProfileView(APIView):
         own = Profile.objects.filter(user=request.user).values_list("username", flat=True).first()
         if username == own:
             raise CannotTargetSelf()
-        target = visible_profiles().filter(username=username).first()
+        targets = exclude_blocked(visible_profiles(), request.user, "user_id")
+        target = targets.filter(username=username).first()
         if target is None:
-            raise NotFound()  # нет такого, забанен, неактивен или не подтвердил почту
+            raise NotFound()  # нет такого, забанен, неактивен, не подтвердил почту или заблокирован
         add_saved(request.user, target.user)
         return Response(status=status.HTTP_204_NO_CONTENT)
 

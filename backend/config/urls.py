@@ -12,6 +12,7 @@ urlpatterns = [
     path("api/", include("apps.users.urls")),
     path("api/", include("apps.profiles.urls")),
     path("api/", include("apps.messaging.urls")),
+    path("api/", include("apps.moderation.urls")),
 ]
 
 # JSON вместо HTML-страниц Django для адресов /api/

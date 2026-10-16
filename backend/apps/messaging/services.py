@@ -10,6 +10,7 @@ from django.db.models import Q
 from django.utils import timezone
 from rest_framework.exceptions import ErrorDetail, NotFound, ValidationError
 
+from apps.moderation.rules import are_blocked
 from apps.profiles.search import visible_profiles
 from apps.users.models import User
 from config.exceptions import (
@@ -76,6 +77,8 @@ def create_request(sender, username, body):
         raise CannotTargetSelf()
     if reason is not None:
         raise NotFound()
+    if are_blocked(sender.pk, target.pk):
+        raise NotFound()  # блокировка в любую сторону: цель «не существует», причина не раскрывается
 
     user_a, user_b = sorted([sender, target], key=lambda user: user.pk)
     with transaction.atomic():
@@ -111,6 +114,8 @@ def decide(conversation_id, user, accept):
     (инициатору — всегда invalid_state, чтобы отказ оставался замаскированным)."""
     with transaction.atomic():
         conversation = Conversation.objects.select_for_update().get(pk=conversation_id)
+        if are_blocked(conversation.user_a_id, conversation.user_b_id):
+            raise ConversationClosed()
         if conversation.recipient_id != user.pk or conversation.status != Status.PENDING:
             raise InvalidState()
         conversation.status = Status.ACCEPTED if accept else Status.DECLINED
@@ -126,6 +131,8 @@ def send_message(conversation_id, sender, body):
         conversation = Conversation.objects.select_for_update().get(pk=conversation_id)
         if not conversation.is_member(sender):
             raise NotFound()  # на случай прямого вызова: участники проверяются во view
+        if are_blocked(conversation.user_a_id, conversation.user_b_id):
+            raise ConversationClosed()  # нейтральный текст: о блокировке не сообщается
         is_initiator = conversation.initiator_id == sender.pk
         if conversation.status == Status.PENDING:
             raise RequestPending() if is_initiator else AcceptRequired()

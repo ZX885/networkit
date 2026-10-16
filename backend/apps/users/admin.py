@@ -1,4 +1,5 @@
 from django.contrib import admin, messages
+from django.db.models import Count, Q
 from django.contrib.auth.admin import UserAdmin as DjangoUserAdmin
 from django.utils import timezone
 
@@ -13,7 +14,15 @@ class UserAdmin(DjangoUserAdmin):
     add_form = UserCreationForm
 
     ordering = ("email",)
-    list_display = ("email", "is_active", "is_staff", "is_banned", "email_verified_at", "date_joined")
+    list_display = (
+        "email",
+        "is_active",
+        "is_staff",
+        "is_banned",
+        "open_reports",
+        "email_verified_at",
+        "date_joined",
+    )
     list_filter = ("is_banned", "is_staff", "is_active")
     search_fields = ("email",)
     readonly_fields = ("banned_at", "last_login", "date_joined")
@@ -30,6 +39,16 @@ class UserAdmin(DjangoUserAdmin):
     )
 
     actions = ["ban_users", "unban_users"]
+
+    def get_queryset(self, request):
+        # Число открытых жалоб на человека: один запрос с агрегатом на весь список
+        return super().get_queryset(request).annotate(
+            open_reports_count=Count("reports_received", filter=Q(reports_received__status="open"))
+        )
+
+    @admin.display(description="Open reports", ordering="open_reports_count")
+    def open_reports(self, obj):
+        return obj.open_reports_count
 
     @admin.action(description="Ban selected users")
     def ban_users(self, request, queryset):

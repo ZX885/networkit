@@ -8,6 +8,8 @@ from django.db.models import Q
 from django.db.models.functions import Lower, Trim
 from rest_framework.exceptions import ErrorDetail, ValidationError
 
+from apps.moderation.rules import exclude_blocked
+
 from . import choices
 from .models import Profile
 
@@ -77,6 +79,7 @@ def search_profiles(user, params):
     """Профили для поиска: без самого пользователя, без скрытых из поиска; новые первыми."""
     cleaned = clean_params(params)
     queryset = visible_profiles().filter(show_in_search=True).exclude(user=user)
+    queryset = exclude_blocked(queryset, user, "user_id")  # блокировка в любую сторону
 
     for token in cleaned["q"].split()[:MAX_TOKENS]:
         queryset = queryset.filter(token_query(token))
