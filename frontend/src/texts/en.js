@@ -379,6 +379,9 @@ export const texts = {
     loadingList: 'Loading people',
     emptyTitle: 'No people found',
     emptyText: 'Try a different search or clear the filters.',
+    filterGoneTitle: 'This filter is no longer available',
+    filterGoneText: 'Clear the filters and try again.',
+    clearFilters: 'Clear filters',
     pagination: {
       label: 'Pagination',
       prev: 'Previous page',

@@ -17,12 +17,16 @@ import styles from './DiscoverPage.module.css';
 const t = texts.discover;
 const FILTERS_ID = 'discover-filters';
 
-// Discover: поиск и фильтры (в адресе страницы), сетка людей, пагинация. Данные — GET /api/profiles/ (api/profiles.js);
-// списки для фильтров и названия на карточках — с сервера (MetaGate).
-export default function DiscoverPage() {
+// Сервер отклонил значение фильтра (invalid_choice): например, город убрали из справочника
+const isFilterGone = (error) =>
+  error?.status === 400 &&
+  FILTER_KEYS.some((key) => error.fields?.[key]?.some((item) => item.code === 'invalid_choice'));
+
+// Список людей, фильтры и пагинация. Живёт внутри MetaGate: запрос уходит только после загрузки
+// справочников, а useDiscoverParams к этому моменту убрал из params (и из адреса) неизвестные значения.
+function DiscoverContent({ filtersOpen }) {
   const { params, update } = useDiscoverParams();
   const { loading, error, data, retry } = usePeople(params);
-  const [filtersOpen, setFiltersOpen] = useState(false);
 
   function clearAll() {
     const empty = Object.fromEntries(FILTER_KEYS.map((key) => [key, '']));
@@ -42,6 +46,73 @@ export default function DiscoverPage() {
     if (pageMissing) update({ page: 1 }, { replace: true });
   }, [pageMissing]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  let content;
+  if (error && !pageMissing) {
+    content = isFilterGone(error) ? (
+      <EmptyState
+        title={t.filterGoneTitle}
+        description={t.filterGoneText}
+        action={<Button onClick={clearAll}>{t.clearFilters}</Button>}
+      />
+    ) : (
+      <EmptyState
+        title={texts.app.errorTitle}
+        description={apiErrorText(error)}
+        action={<Button onClick={retry}>{texts.app.retry}</Button>}
+      />
+    );
+  } else if (empty) {
+    content = (
+      <EmptyState
+        icon={<SearchX size={36} />}
+        title={t.emptyTitle}
+        description={t.emptyText}
+        action={
+          <Button variant="ghost" onClick={clearAll}>
+            {t.clearAll}
+          </Button>
+        }
+      />
+    );
+  } else {
+    content = <PeopleGrid people={data?.results ?? null} />;
+  }
+
+  return (
+    <>
+      <FilterPanel
+        id={FILTERS_ID}
+        open={filtersOpen}
+        params={params}
+        onChange={update}
+        onClear={clearAll}
+      />
+      {/* aria-live: скринридер зачитывает число найденных или «Loading» */}
+      <p className={styles.info} role="status" aria-live="polite">
+        {loading ? t.loadingList : data && t.found(data.count)}
+      </p>
+      {content}
+      {data && (
+        <Pagination
+          page={params.page}
+          pageCount={data.pageCount}
+          onChange={changePage}
+          label={t.pagination.label}
+          prevLabel={t.pagination.prev}
+          nextLabel={t.pagination.next}
+          pageLabel={t.pagination.page}
+        />
+      )}
+    </>
+  );
+}
+
+// Discover: поиск и фильтры (в адресе страницы), сетка людей, пагинация. Данные — GET /api/profiles/ (api/profiles.js);
+// списки для фильтров и названия на карточках — с сервера (MetaGate).
+export default function DiscoverPage() {
+  const { params, update } = useDiscoverParams({ cleanUrl: false }); // адрес чистит DiscoverContent
+  const [filtersOpen, setFiltersOpen] = useState(false);
+
   return (
     <>
       <PageHeader title={t.title}>
@@ -59,48 +130,7 @@ export default function DiscoverPage() {
         <SearchBar value={params.q} onSearch={(q) => update({ q }, { replace: true })} />
       </PageHeader>
       <MetaGate>
-        <FilterPanel
-          id={FILTERS_ID}
-          open={filtersOpen}
-          params={params}
-          onChange={update}
-          onClear={clearAll}
-        />
-        {/* aria-live: скринридер зачитывает число найденных или «Loading» */}
-        <p className={styles.info} role="status" aria-live="polite">
-          {loading ? t.loadingList : data && t.found(data.count)}
-        </p>
-        {error && !pageMissing ? (
-          <EmptyState
-            title={texts.app.errorTitle}
-            description={apiErrorText(error)}
-            action={<Button onClick={retry}>{texts.app.retry}</Button>}
-          />
-        ) : empty ? (
-          <EmptyState
-            icon={<SearchX size={36} />}
-            title={t.emptyTitle}
-            description={t.emptyText}
-            action={
-              <Button variant="ghost" onClick={clearAll}>
-                {t.clearAll}
-              </Button>
-            }
-          />
-        ) : (
-          <PeopleGrid people={data?.results ?? null} />
-        )}
-        {data && (
-          <Pagination
-            page={params.page}
-            pageCount={data.pageCount}
-            onChange={changePage}
-            label={t.pagination.label}
-            prevLabel={t.pagination.prev}
-            nextLabel={t.pagination.next}
-            pageLabel={t.pagination.page}
-          />
-        )}
+        <DiscoverContent filtersOpen={filtersOpen} />
       </MetaGate>
     </>
   );
