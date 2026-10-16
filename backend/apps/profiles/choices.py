@@ -223,20 +223,8 @@ UZ_CITIES = [
     ("karshi", "Karshi"),
     ("termez", "Termez"),
     ("urgench", "Urgench"),
-    ("khiva", "Khiva"),
     ("jizzakh", "Jizzakh"),
-    ("gulistan", "Gulistan"),
     ("navoi", "Navoi"),
-    ("kokand", "Kokand"),
-    ("margilan", "Margilan"),
-    ("chirchiq", "Chirchiq"),
-    ("angren", "Angren"),
-    ("almalyk", "Almalyk"),
-    ("bekabad", "Bekabad"),
-    ("zarafshan", "Zarafshan"),
-    ("shahrisabz", "Shahrisabz"),
-    ("denau", "Denau"),
-    ("asaka", "Asaka"),
 ]
 
 # Для какой страны клиент показывает список городов (UZ_CITIES)

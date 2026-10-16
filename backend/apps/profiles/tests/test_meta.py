@@ -84,7 +84,12 @@ class MetaCitiesTests(APITestCase):
         data = self.client.get(META).json()
 
         cities = data["cities"]
-        self.assertEqual(len(cities), 24)
+        self.assertEqual(len(cities), 12)
+        self.assertEqual(
+            [city["code"] for city in cities],
+            ["tashkent", "samarkand", "bukhara", "andijan", "namangan", "fergana", "nukus",
+             "karshi", "termez", "urgench", "jizzakh", "navoi"],
+        )  # порядок как в справочнике
         self.assertEqual(cities, [{"code": c, "label": label} for c, label in choices.UZ_CITIES])
         codes = [city["code"] for city in cities]
         self.assertEqual(len(codes), len(set(codes)))
@@ -92,6 +97,7 @@ class MetaCitiesTests(APITestCase):
             self.assertEqual(city["code"], city["code"].lower())
             self.assertTrue(city["label"])
         self.assertIn({"code": "tashkent", "label": "Tashkent"}, cities)
-        self.assertIn({"code": "almalyk", "label": "Almalyk"}, cities)
+        self.assertIn({"code": "navoi", "label": "Navoi"}, cities)
+        self.assertNotIn("kokand", [city["code"] for city in cities])  # убран из справочника (теперь «Other»)
         self.assertEqual(data["country_cities_default"], "UZ")
         self.assertIn("UZ", [country["code"] for country in data["countries"]])

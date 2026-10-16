@@ -411,6 +411,12 @@ class SearchCityFilterTests(SearchTestCase):
         self.assertEqual(self.usernames(city="samarkand"), ["in_list"])
         self.assertEqual(self.usernames(q="Zomin"), ["other_city"])  # зато находится текстовым поиском
 
+    def test_former_list_city_is_now_other_and_found_only_by_text(self):
+        person(username="kokand", city="Kokand")  # был в справочнике из 24 городов, теперь «Other»
+
+        self.assertEqual(self.search(city="kokand").status_code, 400)  # кода больше нет
+        self.assertEqual(self.usernames(q="Kokand"), ["kokand"])
+
     def test_city_combines_with_other_filters(self):
         person(
             username="match_all",
