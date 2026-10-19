@@ -71,6 +71,7 @@ export default function LoginForm({ onSuccess }) {
         <Field
           label={t.password}
           type="password"
+          revealable
           placeholder={t.passwordPlaceholder}
           autoComplete="current-password"
           value={password}
