@@ -24,14 +24,25 @@ from config.exceptions import (
 )
 from config.throttles import (
     BASE_THROTTLES,
+    AccountPasswordThrottle,
+    EmailFlowDayThrottle,
+    EmailFlowThrottle,
     LoginHourThrottle,
     LoginThrottle,
     RegisterThrottle,
+    TokenConfirmThrottle,
     UsernameCheckThrottle,
 )
 
 from . import services
-from .serializers import EmailSerializer, LoginSerializer, RegisterSerializer
+from .serializers import (
+    EmailChangeSerializer,
+    EmailSerializer,
+    LoginSerializer,
+    NewPasswordSerializer,
+    PasswordChangeSerializer,
+    RegisterSerializer,
+)
 
 
 @api_view(["GET"])
@@ -129,3 +140,83 @@ class LogoutView(APIView):
     def post(self, request):
         logout(request._request)
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+def _body(request):
+    """Тело запроса как словарь (всё остальное — пустой словарь: дальше обычная ошибка токена или поля)."""
+    return request.data if isinstance(request.data, dict) else {}
+
+
+class PasswordResetRequestView(APIView):
+    """POST /api/auth/password-reset/ — всегда 202, есть ли такой аккаунт, не раскрывается."""
+
+    permission_classes = [AllowAny]
+    throttle_classes = [*BASE_THROTTLES, EmailFlowThrottle, EmailFlowDayThrottle]
+
+    def post(self, request):
+        serializer = EmailSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        services.request_password_reset(serializer.validated_data["email"])
+        return Response({"status": "sent"}, status=status.HTTP_202_ACCEPTED)
+
+
+class PasswordResetConfirmView(APIView):
+    """POST /api/auth/password-reset/confirm/ — новый пароль по ссылке из письма (можно и вошедшему)."""
+
+    permission_classes = [AllowAny]
+    throttle_classes = [*BASE_THROTTLES, TokenConfirmThrottle]
+
+    def post(self, request):
+        data = _body(request)
+
+        def get_new_password(user):
+            serializer = NewPasswordSerializer(data=data, context={"user": user})
+            serializer.is_valid(raise_exception=True)
+            return serializer.validated_data["new_password"]
+
+        services.reset_password(data.get("uid"), data.get("token"), get_new_password)
+        return Response({"status": "password_changed"})
+
+
+class PasswordChangeView(APIView):
+    """POST /api/auth/password/change/ — смена пароля вошедшим (текущая сессия остаётся)."""
+
+    throttle_classes = [*BASE_THROTTLES, AccountPasswordThrottle]
+
+    def post(self, request):
+        serializer = PasswordChangeSerializer(data=request.data, context={"user": request.user})
+        serializer.is_valid(raise_exception=True)
+        services.change_password(
+            request._request, request.user, serializer.validated_data["new_password"]
+        )
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class EmailChangeView(APIView):
+    """POST /api/auth/email/change/ — письмо со ссылкой на новый адрес; ответ не зависит от того,
+    занят ли адрес."""
+
+    throttle_classes = [
+        *BASE_THROTTLES,
+        AccountPasswordThrottle,
+        EmailFlowThrottle,
+        EmailFlowDayThrottle,
+    ]
+
+    def post(self, request):
+        serializer = EmailChangeSerializer(data=request.data, context={"user": request.user})
+        serializer.is_valid(raise_exception=True)
+        services.request_email_change(request.user, serializer.validated_data["new_email"])
+        return Response({"status": "verification_sent"}, status=status.HTTP_202_ACCEPTED)
+
+
+class EmailChangeConfirmView(APIView):
+    """POST /api/auth/email/change/confirm/ — применяет смену адреса по ссылке (сессии остаются)."""
+
+    permission_classes = [AllowAny]
+    throttle_classes = [*BASE_THROTTLES, TokenConfirmThrottle]
+
+    def post(self, request):
+        token = _body(request).get("token")
+        services.confirm_email_change(token.strip() if isinstance(token, str) else "")
+        return Response({"status": "email_changed"})

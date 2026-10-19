@@ -1,13 +1,20 @@
 from rest_framework import status
-from rest_framework.exceptions import ErrorDetail, NotFound, ValidationError
+from rest_framework.exceptions import ErrorDetail, NotFound, PermissionDenied, ValidationError
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.generics import ListAPIView
 from rest_framework.views import APIView
 
+from apps.users import services as account_services
+from apps.users.serializers import DeleteAccountSerializer
 from config.pagination import StandardPagination
 from config.exceptions import CannotTargetSelf
-from config.throttles import BASE_THROTTLES, SavedThrottle, SearchThrottle
+from config.throttles import (
+    BASE_THROTTLES,
+    AccountPasswordThrottle,
+    SavedThrottle,
+    SearchThrottle,
+)
 
 from .meta import build_meta, meta_etag
 from .models import Profile, SavedProfile
@@ -58,7 +65,12 @@ class MetaView(APIView):
 
 
 class MeView(APIView):
-    """GET — свой профиль, PATCH — изменить разрешённые поля."""
+    """GET — свой профиль, PATCH — изменить разрешённые поля, DELETE — удалить аккаунт (с паролем)."""
+
+    def get_throttles(self):
+        if self.request.method == "DELETE":  # проверка пароля: общий лимит на пользователя
+            return [throttle() for throttle in [*BASE_THROTTLES, AccountPasswordThrottle]]
+        return super().get_throttles()
 
     def get_profile(self, request):
         profile = Profile.objects.select_related("user").filter(user=request.user).first()
@@ -88,8 +100,23 @@ class MeView(APIView):
         return Response(OwnProfileSerializer(profile).data, status=status.HTTP_200_OK)
 
 
+    def delete(self, request):
+        """DELETE /api/me/ {password}: удаляет аккаунт, все данные (каскадом) и сессии. 204 и выход.
+        Сотрудники и суперпользователи удалить себя через API не могут (403)."""
+        user = request.user
+        if user.is_staff or user.is_superuser:
+            raise PermissionDenied("This account cannot be deleted here.")
+        serializer = DeleteAccountSerializer(data=request.data, context={"user": user})
+        serializer.is_valid(raise_exception=True)
+        account_services.delete_account(user)
+        request._request.session.flush()  # выход: текущая сессия закрыта, cookie очищается
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
 class PrivacyView(MeView):
     """GET/PATCH /api/me/privacy/ — 5 флагов приватности владельца."""
+
+    http_method_names = ["get", "patch", "head", "options"]  # DELETE (удаление аккаунта) — только на /api/me/
 
     def get(self, request):
         return Response(privacy_of(self.get_profile(request)))

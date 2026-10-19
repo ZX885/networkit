@@ -82,7 +82,8 @@ function checkEmail(value) {
   return EMAIL_REGEX.test(email) && email.length <= EMAIL_MAX ? null : 'emailInvalid';
 }
 
-function checkPassword(value) {
+// Код ошибки нового пароля (ключ texts.validation) или null. Общая для регистрации, сброса и смены пароля.
+export function checkPassword(value) {
   if (!value) return 'required';
   if (value.length < PASSWORD_MIN) return 'passwordShort';
   if (value.length > PASSWORD_MAX) return 'passwordLong';

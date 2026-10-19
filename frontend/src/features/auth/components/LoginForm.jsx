@@ -78,6 +78,9 @@ export default function LoginForm({ onSuccess }) {
           onChange={(e) => setPassword(e.target.value)}
           error={errors.password}
         />
+        <p className={styles.forgot}>
+          <Link to="/forgot-password">{texts.passwordReset.forgotLink}</Link>
+        </p>
         <Button type="submit" fullWidth loading={loading}>
           {t.submit}
         </Button>

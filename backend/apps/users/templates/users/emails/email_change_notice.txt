@@ -1,0 +1,8 @@
+{% autoescape off %}Hi {{ first_name }},
+
+Someone asked to change the email address of your NetworkIt account to {{ new_email }}. Nothing changes until that address is confirmed.
+
+If this was not you, change your password and contact support.
+
+— The NetworkIt team
+{% endautoescape %}
