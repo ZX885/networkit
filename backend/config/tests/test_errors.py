@@ -85,9 +85,9 @@ class ErrorFormatTests(APITestCase):
     def test_unhandled_exception_is_logged_with_traceback_and_hidden_from_client(self):
         self.client.force_login(make_user(email="crash@example.com"))
 
-        with mock.patch("apps.profiles.views.MeView.get", side_effect=RuntimeError("secret boom")):
+        with mock.patch("apps.profiles.views.ProfileListView.get", side_effect=RuntimeError("secret boom")):
             with self.assertLogs("config.exceptions", "ERROR") as logs:
-                response = self.client.get("/api/me/")
+                response = self.client.get("/api/profiles/")
 
         self.assertEqual(response.status_code, 500)
         self.assertEqual(
@@ -97,7 +97,7 @@ class ErrorFormatTests(APITestCase):
         self.assertNotIn("secret boom", response.content.decode())  # клиент не видит причину
         record = logs.records[0]
         self.assertIsNotNone(record.exc_info)  # в логе есть трейсбек
-        self.assertIn("GET /api/me/", record.getMessage())
+        self.assertIn("GET /api/profiles/", record.getMessage())
         self.assertIn("secret boom", str(record.exc_info[1]))
 
     def test_server_error_for_site_pages_is_html(self):

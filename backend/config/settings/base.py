@@ -202,6 +202,10 @@ THROTTLE_RATES = {
     "message_request": "10/day",  # новые запросы на переписку
     "message_send": "30/min",  # сообщения в диалогах
     "message_send_day": "500/day",
+    "email_flow": "5/hour",  # письма (сброс пароля, смена email): по IP
+    "email_flow_day": "5/day",  # те же письма: по адресу email
+    "account_password": "10/hour",  # проверки пароля (смена пароля, смена email, удаление): на пользователя
+    "token_confirm": "30/hour",  # подтверждение по ссылке (сброс пароля, смена email): по IP
 }
 # Выключатель лимитов (в тестах выключены, отдельные тесты включают)
 THROTTLING_ENABLED = env.bool("THROTTLING_ENABLED", default=not TESTING)

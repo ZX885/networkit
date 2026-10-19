@@ -70,3 +70,60 @@ class EmailSerializer(serializers.Serializer):
 
     def validate_email(self, value):
         return value.strip().lower()
+
+
+class NewPasswordSerializer(serializers.Serializer):
+    """Новый пароль (сброс по ссылке): полные проверки с учётом данных пользователя из context["user"]."""
+
+    new_password = serializers.CharField(max_length=128, trim_whitespace=False, write_only=True)
+
+    def validate_new_password(self, value):
+        from . import services
+
+        services.validate_new_password(value, self.context["user"])
+        return value
+
+
+def _check_current_password(user, value):
+    if not user.check_password(value):
+        raise serializers.ValidationError("Incorrect password.", code="incorrect")
+    return value
+
+
+class PasswordChangeSerializer(NewPasswordSerializer):
+    """POST /api/auth/password/change/: старый пароль и новый."""
+
+    old_password = serializers.CharField(max_length=128, trim_whitespace=False, write_only=True)
+
+    def validate_old_password(self, value):
+        return _check_current_password(self.context["user"], value)
+
+    def validate(self, attrs):
+        # Новый пароль не может совпадать со старым (старый уже проверен как верный)
+        if attrs["new_password"] == attrs["old_password"]:
+            raise serializers.ValidationError(
+                {"new_password": [ErrorDetail("The new password must be different from the current one.", code="same_as_old")]}
+            )
+        return attrs
+
+
+class EmailChangeSerializer(serializers.Serializer):
+    """POST /api/auth/email/change/: новый адрес и текущий пароль."""
+
+    new_email = serializers.EmailField(max_length=254)
+    password = serializers.CharField(max_length=128, trim_whitespace=False, write_only=True)
+
+    def validate_new_email(self, value):
+        return value.strip().lower()
+
+    def validate_password(self, value):
+        return _check_current_password(self.context["user"], value)
+
+
+class DeleteAccountSerializer(serializers.Serializer):
+    """DELETE /api/me/: пароль подтверждает удаление."""
+
+    password = serializers.CharField(max_length=128, trim_whitespace=False, write_only=True)
+
+    def validate_password(self, value):
+        return _check_current_password(self.context["user"], value)

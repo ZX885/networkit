@@ -1,0 +1,8 @@
+{% autoescape off %}Hi,
+
+Someone asked to use this email address for another NetworkIt account, but it already belongs to an account.
+
+If this was not you, you can ignore this email: nothing has changed.
+
+— The NetworkIt team
+{% endautoescape %}

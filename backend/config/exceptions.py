@@ -161,9 +161,18 @@ def _collect(detail, path, fields, non_field):
         non_field.append(_entry(detail))
 
 
-# Сообщения людей нельзя выводить в логи: ошибки БД содержат строку целиком («Failing row contains …»),
+# Сообщения людей, пароли и токены нельзя выводить в логи: ошибки БД содержат строку целиком («Failing row contains …»),
 # а у исключений из текста сообщения бывает текст в самом сообщении об ошибке.
-PRIVATE_PATH_PREFIXES = ("/api/conversations/",)
+PRIVATE_PATH_PREFIXES = (
+    "/api/conversations/",
+    # Пароли, токены из писем и email в теле запроса
+    "/api/auth/login/",
+    "/api/auth/register/",
+    "/api/auth/password-reset/",
+    "/api/auth/password/",
+    "/api/auth/email/",
+    "/api/me/",  # DELETE /api/me/ принимает пароль
+)
 
 
 class RedactedError(Exception):

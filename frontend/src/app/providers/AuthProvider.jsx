@@ -57,12 +57,15 @@ export default function AuthProvider({ children }) {
     setState(GUEST);
   }, []);
 
+  // Сессия уже закрыта сервером (удаление аккаунта, сброс пароля): просто становимся гостем, без запроса
+  const endSession = useCallback(() => setState(GUEST), []);
+
   // Обновляет данные вошедшего (например, после PATCH /api/me/) без экрана загрузки
   const updateUser = useCallback((user) => setState({ status: 'authenticated', user }), []);
 
   const value = useMemo(
-    () => ({ ...state, login, logout, refresh, updateUser }),
-    [state, login, logout, refresh, updateUser],
+    () => ({ ...state, login, logout, endSession, refresh, updateUser }),
+    [state, login, logout, endSession, refresh, updateUser],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

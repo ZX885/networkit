@@ -1,0 +1,10 @@
+{% autoescape off %}Hi {{ first_name }},
+
+Please confirm this email address for your NetworkIt account:
+
+{{ link }}
+
+The link works for 3 days. If you did not ask for this, just ignore this email: nothing will change.
+
+— The NetworkIt team
+{% endautoescape %}

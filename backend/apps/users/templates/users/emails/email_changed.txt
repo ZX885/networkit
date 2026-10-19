@@ -1,0 +1,8 @@
+{% autoescape off %}Hi {{ first_name }},
+
+The email address of your NetworkIt account was changed to {{ new_email }}. You will no longer get account emails at this address.
+
+If this was not you, reset your password and contact support.
+
+— The NetworkIt team
+{% endautoescape %}
