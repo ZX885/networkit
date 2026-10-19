@@ -12,6 +12,8 @@ class User(AbstractBaseUser, PermissionsMixin):
     # unique=True нужен Django для USERNAME_FIELD; регистронезависимость — констрейнт ниже
     email = models.EmailField(max_length=254, unique=True)
     email_verified_at = models.DateTimeField(null=True, blank=True)  # null — почта не подтверждена
+    # Новый адрес, ожидающий подтверждения по ссылке (смена email); email меняется только после подтверждения
+    pending_email = models.EmailField(max_length=254, null=True, blank=True)
 
     # Модерация (меняется только в админке)
     is_banned = models.BooleanField(default=False)

@@ -143,6 +143,8 @@ AUTH_PASSWORD_VALIDATORS = [
     },
     {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
+    # Слабый пароль (Weak) отклоняется, нужен минимум Medium: apps/users/password_strength.py
+    {"NAME": "apps.users.password_validators.PasswordStrengthValidator"},
 ]
 
 # В тестах используем быстрый (небезопасный) хэш: настоящий PBKDF2 делает тесты в разы медленнее
@@ -207,6 +209,10 @@ THROTTLE_RATES = {
     "message_send_day": "500/day",
     "block": "30/hour",  # PUT/DELETE /api/blocks/{username}/ на пользователя
     "report": "10/day",  # POST /api/reports/ на пользователя
+    "email_flow": "5/hour",  # письма (сброс пароля, смена email): по IP
+    "email_flow_day": "5/day",  # те же письма: по адресу email
+    "account_password": "10/hour",  # проверки пароля (смена пароля, смена email, удаление): на пользователя
+    "token_confirm": "30/hour",  # подтверждение по ссылке (сброс пароля, смена email): по IP
 }
 # Выключатель лимитов (в тестах выключены, отдельные тесты включают)
 THROTTLING_ENABLED = env.bool("THROTTLING_ENABLED", default=not TESTING)

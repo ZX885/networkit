@@ -345,9 +345,9 @@ class NoBodiesInLogsTests(APITestCase):
         self.assertNotIn(SECRET, response.content.decode())
 
     def test_other_paths_still_log_the_error_text(self):
-        with mock.patch("apps.profiles.views.MeView.get", side_effect=RuntimeError("visible detail")):
+        with mock.patch("apps.profiles.views.ProfileListView.get", side_effect=RuntimeError("visible detail")):
             with self.assertLogs("config.exceptions", "ERROR") as logs:
-                self.client.get("/api/me/")
+                self.client.get("/api/profiles/")
 
         self.assertIn("visible detail", self.logged_text(logs))
 

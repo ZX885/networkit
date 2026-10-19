@@ -1,3 +1,4 @@
+import PasswordStrength from '../../../../../components/ui/PasswordStrength.jsx';
 import ChipSelect from '../../../../../components/ui/ChipSelect.jsx';
 import Field from '../../../../../components/ui/Field.jsx';
 import FieldGroup from '../../../../../components/ui/FieldGroup.jsx';
@@ -74,10 +75,13 @@ export default function BasicInfoStep({ form }) {
         type="password"
         placeholder={f.passwordPlaceholder}
         autoComplete="new-password"
+        revealable
+        describedBy="register-password-strength"
         value={data.password}
         onChange={text('password')}
         error={errorText(errors.password)}
       />
+      <PasswordStrength id="register-password-strength" value={data.password} />
       <BirthDateFields data={data} update={update} error={errorText(errors.birthDate, limits)} />
       <FieldGroup legend={f.gender} optionalText={texts.common.optional}>
         <ChipSelect

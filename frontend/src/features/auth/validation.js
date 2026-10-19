@@ -12,6 +12,7 @@ import {
   USERNAME_REGEX,
   YEAR_LEVEL_MAX,
 } from '../../constants/rules.js';
+import { isPasswordAcceptable } from '../../lib/passwordStrength.js';
 import { getAge, isRealDate } from '../../lib/date.js';
 
 // Правила проверки полей регистрации (docs/SPEC.md §5). Функции возвращают объект
@@ -81,10 +82,12 @@ function checkEmail(value) {
   return EMAIL_REGEX.test(email) && email.length <= EMAIL_MAX ? null : 'emailInvalid';
 }
 
-function checkPassword(value) {
+// Код ошибки нового пароля (ключ texts.validation) или null. Общая для регистрации, сброса и смены пароля.
+export function checkPassword(value) {
   if (!value) return 'required';
   if (value.length < PASSWORD_MIN) return 'passwordShort';
-  return value.length > PASSWORD_MAX ? 'passwordLong' : null;
+  if (value.length > PASSWORD_MAX) return 'passwordLong';
+  return isPasswordAcceptable(value) ? null : 'passwordWeak'; // нужен минимум Medium
 }
 
 const checkRequired = (value) => (isEmpty(value) ? 'required' : null);

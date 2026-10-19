@@ -5,9 +5,14 @@ import PublicLayout from '../components/layout/PublicLayout.jsx';
 import GuestRoute from './routes/GuestRoute.jsx';
 import NotFoundRoute from './routes/NotFoundRoute.jsx';
 import ProtectedRoute from './routes/ProtectedRoute.jsx';
+import DangerTab from '../features/settings/components/DangerTab.jsx';
+import SecurityTab from '../features/settings/components/SecurityTab.jsx';
 import BlockedTab from '../features/settings/components/BlockedTab.jsx';
 import AccountTab from '../features/settings/components/AccountTab.jsx';
 import PrivacyTab from '../features/settings/components/PrivacyTab.jsx';
+import ConfirmEmailChangePage from '../pages/ConfirmEmailChangePage.jsx';
+import ForgotPasswordPage from '../pages/ForgotPasswordPage.jsx';
+import ResetPasswordPage from '../pages/ResetPasswordPage.jsx';
 import ComingSoonPage from '../pages/ComingSoonPage.jsx';
 import DiscoverPage from '../pages/DiscoverPage.jsx';
 import EditProfilePage from '../pages/EditProfilePage.jsx';
@@ -53,6 +58,10 @@ export default function AppRouter() {
             />
             <Route path="/verify-email/:token" element={<VerifyEmailPage />} />
             <Route path="/resend-verification" element={<ResendVerificationPage />} />
+            {/* Сброс пароля и смена email по ссылкам из писем: доступны и вошедшему */}
+            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+            <Route path="/reset-password/:uid/:token" element={<ResetPasswordPage />} />
+            <Route path="/confirm-email-change/:token" element={<ConfirmEmailChangePage />} />
             <Route path="/terms" element={<ComingSoonPage title={texts.legal.termsTitle} />} />
             <Route path="/privacy" element={<ComingSoonPage title={texts.legal.privacyTitle} />} />
           </Route>
@@ -75,6 +84,8 @@ export default function AppRouter() {
               <Route index element={<Navigate to="account" replace />} />
               <Route path="account" element={<AccountTab />} />
               <Route path="privacy" element={<PrivacyTab />} />
+              <Route path="security" element={<SecurityTab />} />
+              <Route path="danger" element={<DangerTab />} />
               <Route path="blocked" element={<BlockedTab />} />
             </Route>
           </Route>

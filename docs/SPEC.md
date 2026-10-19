@@ -215,7 +215,9 @@ UniqueConstraint(reporter, target) при `status=open` (нельзя спами
 | `user` | 300/min | все авторизованные |
 | `login` | 5/min и 30/hour по IP; +10/hour по email | `/auth/login/` |
 | `register` | 5/hour по IP | `/auth/register/` |
-| `email_flow` | 5/hour по IP и 5/day по email | `password-reset`, `resend-verification`, `email/change` |
+| `email_flow` | 5/hour по IP и 5/day по адресу email из тела запроса (`email` или `new_email`; считается и для несуществующих адресов) | `password-reset`, `email/change` (`resend-verification` — отдельный лимит `register`) |
+| `account_password` | 10/hour на пользователя, общая корзина | проверки пароля: `password/change`, `email/change`, `DELETE /api/me/` |
+| `token_confirm` | 30/hour по IP | `password-reset/confirm`, `email/change/confirm` |
 | `username_check` | 30/min | `username-available` |
 | `search` | 60/min | `GET /profiles/` |
 | `saved` | 60/min | `PUT/DELETE /saved/{username}/` |
@@ -292,12 +294,16 @@ UniqueConstraint(reporter, target) при `status=open` (нельзя спами
 ### 3.4 Пароль и email
 | Метод | URL | Доступ | Тело | Ответ |
 |---|---|---|---|---|
-| POST | `/api/auth/password-reset/` | аноним | `{"email"}` | всегда `202 {"status":"sent"}` |
-| POST | `/api/auth/password-reset/confirm/` | аноним | `{"uid","token","new_password"}` | `200 {"status":"password_changed"}`; 400 `invalid_token`/`validation_error`; все сессии пользователя сбрасываются |
-| POST | `/api/auth/password/change/` | пользователь | `{"old_password","new_password"}` | `204`; текущая сессия остаётся, остальные сбрасываются; 400 поле `old_password` код `incorrect` |
-| POST | `/api/auth/email/change/` | пользователь | `{"new_email","password"}` | `202 {"status":"verification_sent"}`; письмо на новый адрес, уведомление на старый; в `pending_email` |
-| POST | `/api/auth/email/change/confirm/` | пользователь | `{"token"}` | `200 {"status":"email_changed"}` |
+| POST | `/api/auth/password-reset/` | аноним (вошедшему тоже можно) | `{"email"}` | всегда `202 {"status":"sent"}`: одинаково для существующих, несуществующих, неподтверждённых и забаненных адресов; письмо уходит только существующему, подтверждённому и незабаненному пользователю |
+| POST | `/api/auth/password-reset/confirm/` | аноним (вошедшему тоже можно) | `{"uid","token","new_password"}` | `200 {"status":"password_changed"}`; 400 `invalid_token` (одинаково для просроченной, подделанной и использованной ссылки, неизвестного uid, забаненного и неподтверждённого пользователя); слабый или негодный новый пароль — 400 `validation_error` по полю `new_password`, ссылка остаётся рабочей; все сессии пользователя удаляются; на почту уходит уведомление «Your password was changed» |
+| POST | `/api/auth/password/change/` | пользователь | `{"old_password","new_password"}` | `204`; текущая сессия остаётся, остальные удаляются; 400 поле `old_password` код `incorrect`; новый пароль проверяется так же, как при регистрации (сила не ниже Medium, сходство с email и именем, частые пароли); уведомление «Your password was changed» на почту; новый пароль не может совпадать со старым (400 поле `new_password` код `same_as_old`) |
+| POST | `/api/auth/email/change/` | пользователь | `{"new_email","password"}` | `202 {"status":"verification_sent"}`; 400 поле `password` код `incorrect`; адрес нормализуется (`strip` + нижний регистр) и пишется в `pending_email`; письмо со ссылкой на новый адрес, уведомление на старый. Если адрес занят или совпадает с текущим, ответ тот же (занятому адресу уходит письмо «адрес уже используется», `pending_email` не пишется) |
+| POST | `/api/auth/email/change/confirm/` | аноним или пользователь | `{"token"}` | `200 {"status":"email_changed"}`: email меняется, `email_verified_at = now`, `pending_email` очищается, сессии остаются, на ПРЕЖНИЙ адрес уходит уведомление «Your email was changed»; любая проблема с токеном — 400 `invalid_token` |
 | GET | `/api/auth/username-available/?username=janedoe` | аноним | — | `{"available": true}`; невалидный формат → `{"available": false, "reason": "invalid_format"}` |
+
+**Токены (`django.core.signing`, без хранения в базе, `apps/users/tokens.py`).** Подтверждение почты: соль `users.verify-email`, 3 дня. Сброс пароля: соль `users.password-reset`, **1 час**, в токене uid, email и отпечаток хэша пароля, поэтому после смены пароля или email старые ссылки перестают работать; ссылка `{SITE_URL}/reset-password/{uid}/{token}` (`uid` — `urlsafe_base64(pk)`). Смена email: соль `users.confirm-email-change`, **3 дня**, в токене uid и новый адрес; применяется, только пока `pending_email` совпадает с ним (одноразовость; новый запрос отменяет прежнюю ссылку); ссылка `{SITE_URL}/confirm-email-change/{token}`. Ссылки пишутся в лог одной строкой `DEMO link:` при `DEBUG` или `DEMO_LOG_VERIFY_LINKS`. Письма отправляются синхронно; выравнивание времени ответа при реальной почте (для существующего и несуществующего адреса) — задача на потом.
+
+**Логи.** Ошибки по `/api/auth/login/`, `/api/auth/register/`, `/api/auth/password-reset/`, `/api/auth/password/`, `/api/auth/email/`, `/api/me/` и `/api/conversations/` логируются без текста исключения (`PRIVATE_PATH_PREFIXES`): пароли, токены и адреса в журнал не попадают.
 
 ### 3.5 Свой профиль
 **GET `/api/me/`** — пользователь → `200` Own-профиль:
@@ -317,7 +323,7 @@ UniqueConstraint(reporter, target) при `status=open` (нельзя спами
 }
 ```
 **PATCH `/api/me/`** — владелец. Частичное обновление. Изменяемые: `first_name, last_name, gender, country, region, city, status, school, university, field, year_level, bio, interests, languages, goals, contacts`. Отклоняются (read-only, ответ 400 `read_only_field`, запрос не применяется целиком): `username, date_of_birth, email, email_verified, age, is_minor, is_banned, created_at, avatar_url, privacy, country_label, field_label, status_label`. Неизвестные ключи (например, `phone`, `field_other` — их нет) молча игнорируются. Значения `interests/languages/goals` проверяются по справочнику (`invalid_choice`), без повторов (`duplicate`) и в пределах лимитов 10/10/8 (`too_many`). → `200` Own-профиль.
-**DELETE `/api/me/`** — владелец. `{"password": "..."}` → `204`; удаляется пользователь, профиль, файл аватара; сессия завершается. Ошибка: 400 поле `password` код `incorrect`.
+**DELETE `/api/me/`** — владелец. `{"password": "..."}` → `204`; в одной транзакции удаляются пользователь и все его сессии, затем срабатывает точка расширения для файла аватара (`delete_account_files`, B4b); текущая сессия закрывается. Ошибка: 400 поле `password` код `incorrect`; сотрудник или суперпользователь (`is_staff`/`is_superuser`) удалить себя через API не может — 403; без входа — 401; лимит — `account_password`. **Каскад по коду:** `Profile`; `SavedProfile` (его закладки и закладки на него); `Conversation` (как `user_a`, `user_b` и `initiator`) вместе с `Message` у обеих сторон; `Block` в обе стороны и `Report` на него (`target`) — удаляются; `Report` от него (`reporter`), `Report.handled_by` и `Report.conversation` — `SET_NULL`; записи `LogEntry` админки удаляются. Сообщения удалённого человека у собеседника не сохраняются (решение заказчика).
 **PUT `/api/me/avatar/`** — владелец, `multipart/form-data`, поле `file`. → `200 {"avatar_url": "/media/avatars/<uuid>.webp"}`; старый файл удаляется. Ошибки: 400 `invalid_image`, 413 `file_too_large`, 415 `unsupported_media_type`.
 **DELETE `/api/me/avatar/`** → `204`.
 **GET/PATCH `/api/me/privacy/`** — владелец; тело/ответ `{"show_location":…, "show_university":…, "show_contacts":…, "show_in_search":…, "show_join_date":…}` (в PATCH любые из пяти). Младше 18 лет: `show_contacts: true` → 400 `not_allowed_for_minors` (поле `show_contacts`), а в ответах `show_contacts` всегда `false`.
@@ -444,7 +450,7 @@ PUT/DELETE избранного и блокировок идемпотентны
 | Поле | Правило | Код ошибки |
 |---|---|---|
 | email | валидный формат, ≤254, нормализация: `strip` + нижний регистр, уникален без учёта регистра | `invalid`, `taken` (при регистрации не раскрывается — см. §3.2) |
-| password | ≥8 символов, ≤128; Django-валидаторы: не слишком похож на email/имя, не из списка распространённых, не только цифры | `too_short`, `too_common`, `entirely_numeric`, `too_similar` |
+| password | ≥8 символов, ≤128; Django-валидаторы: не слишком похож на email/имя, не из списка распространённых, не только цифры; **сила не ниже Medium** (см. ниже) | `too_short`, `too_common`, `entirely_numeric`, `too_similar`, `too_weak` |
 | username | `^[a-z][a-z0-9_]{2,29}$` (3–30, начинается с буквы, только строчные латинские, цифры, `_`); приводится к нижнему регистру; нет `__`; не из зарезервированных (`admin`, `api`, `me`, `settings`, `login`, `register`, `support`, `staff`, `networkit`, …) | `invalid_format`, `reserved`, `taken` |
 | first_name / last_name | 1–60 после `strip`; только буквы Unicode, пробел, дефис, апостроф, точка; без `<`, `>`, управляющих символов | `required`, `too_long`, `invalid_characters` |
 | date_of_birth | формат `YYYY-MM-DD`; не в будущем; возраст на дату регистрации **≥16** и ≤100 | `invalid`, `too_young`, `too_old` |
@@ -473,6 +479,12 @@ PUT/DELETE избранного и блокировок идемпотентны
 Все строки перед проверкой проходят `strip`; значения HTML не санитизируются на сервере (хранятся как текст) — безопасность вывода обеспечивает React (никакого `dangerouslySetInnerHTML`) и ограничения формата выше.
 
 ---
+
+**Сила пароля (Weak / Medium / Strong).** Слабый пароль отклоняется, принимаются Medium и Strong. Формула единая для сервера (`apps/users/password_strength.py`, валидатор `apps.users.password_validators.PasswordStrengthValidator` в `AUTH_PASSWORD_VALIDATORS`) и frontend (`frontend/src/lib/passwordStrength.js`). Длина считается в кодовых точках Unicode; классы символов: строчные, заглавные, цифры, прочие (пробел, знаки, иероглифы, эмодзи).
+- **Weak:** длина < 8, или классов < 2, или разных символов < 4 (`aaaaaaa1` — Weak).
+- **Strong:** (длина ≥ 12 и классов ≥ 3) или (длина ≥ 16 и классов ≥ 2).
+- **Medium:** всё остальное.
+Внутри Django код ошибки `password_too_weak`, клиенту приходит `too_weak` (как `password_too_short` → `too_short`). Текст ошибки не содержит пароля. Таблица проверочных паролей: `backend/apps/users/tests/password_cases.json` (её читают тесты Django и проверка frontend).
 
 ## 6. Правила приватности
 

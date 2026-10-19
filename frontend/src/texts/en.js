@@ -5,6 +5,21 @@ export const texts = {
   common: {
     loading: 'Loading',
     optional: '(optional)',
+    showPassword: 'Show password',
+    hidePassword: 'Hide password',
+  },
+
+  // Индикатор силы пароля (components/ui/PasswordStrength.jsx); формула — lib/passwordStrength.js
+  passwordStrength: {
+    prefix: 'Password strength:',
+    levels: { weak: 'Weak', medium: 'Medium', strong: 'Strong' },
+    hints: {
+      minLength: 'Use at least 8 characters',
+      addClass: 'Add a number, a capital letter or a symbol',
+      moreVariety: 'Use at least 4 different characters',
+      addSymbolOrNumber: 'Add a capital letter, a number or a symbol to make it stronger',
+      moreLength: 'Use 12 or more characters to make it stronger',
+    },
   },
 
   nav: {
@@ -312,6 +327,50 @@ export const texts = {
     retry: 'Try again',
   },
 
+  // Сброс пароля (страницы /forgot-password и /reset-password/:uid/:token)
+  passwordReset: {
+    forgotLink: 'Forgot password?',
+    forgot: {
+      title: 'Reset your password',
+      subtitle: 'Enter your email and we will send you a link to choose a new password.',
+      email: 'Email',
+      emailPlaceholder: 'you@example.com',
+      emailRequired: 'Enter your email',
+      emailInvalid: 'Please enter a valid email',
+      submit: 'Send reset link',
+      again: 'Send again',
+      wait: (seconds) => `Send again in ${seconds}s`,
+      sent: 'If the email is registered, we sent a link',
+      back: 'Back to login',
+    },
+    reset: {
+      title: 'Choose a new password',
+      subtitle: 'Pick a password of at least Medium strength.',
+      newPassword: 'New password',
+      newPasswordPlaceholder: 'Your new password',
+      submit: 'Change password',
+      successTitle: 'Password changed',
+      successText: 'You can log in with your new password now.',
+      logIn: 'Log in',
+      invalidTitle: "This link doesn't work",
+      invalidText: 'The link is invalid, has expired or was already used. Request a new one.',
+      requestNew: 'Request a new link',
+    },
+  },
+
+  // Подтверждение новой почты по ссылке (/confirm-email-change/:token)
+  confirmEmailChange: {
+    checking: 'Confirming your new email…',
+    successTitle: 'Email changed',
+    successText: 'Your new email address is confirmed.',
+    goSettings: 'Go to settings',
+    logIn: 'Log in',
+    errorTitle: "We couldn't confirm your new email",
+    invalidText:
+      'This link is invalid, has expired or was already used. Request the change again in Settings.',
+    retry: 'Try again',
+  },
+
   resendPage: {
     title: 'Request a new link',
     subtitle: 'Enter your email and we will send a new confirmation link.',
@@ -485,13 +544,64 @@ export const texts = {
   settings: {
     title: 'Settings',
     navLabel: 'Settings sections',
-    tabs: { account: 'Account', privacy: 'Privacy', blocked: 'Blocked users' },
+    tabs: {
+      account: 'Account',
+      privacy: 'Privacy',
+      security: 'Security',
+      danger: 'Danger',
+      blocked: 'Blocked users',
+    },
     account: {
       title: 'Account settings',
       subtitle: 'Your display name and username.',
       displayName: 'Display name',
       username: 'Username',
       readOnly: "Can't be changed in this version",
+    },
+    security: {
+      title: 'Security',
+      subtitle: 'Change your password or your email address.',
+      password: {
+        title: 'Change password',
+        old: 'Current password',
+        new: 'New password',
+        repeat: 'Repeat new password',
+        submit: 'Change password',
+        mismatch: 'The passwords do not match',
+        success: 'Password changed. Other sessions were signed out.',
+      },
+      email: {
+        title: 'Change email',
+        current: (email) => `Current email: ${email}`,
+        newEmail: 'New email',
+        newEmailPlaceholder: 'new@example.com',
+        newEmailRequired: 'Enter the new email',
+        newEmailInvalid: 'Please enter a valid email',
+        password: 'Your password',
+        submit: 'Change email',
+        sent: 'Check your new email to confirm',
+        note: 'Your email changes only after you open the link we send to the new address.',
+      },
+    },
+    danger: {
+      title: 'Danger zone',
+      subtitle: 'Actions here cannot be undone.',
+      deleteTitle: 'Delete account',
+      deleteText: 'Your profile, saved profiles and conversations will be deleted for good.',
+      deleteButton: 'Delete my account',
+      modalTitle: 'Delete your account?',
+      modalIntro: 'This will permanently delete:',
+      willDelete: [
+        'Your profile and everything on it',
+        'Your saved profiles',
+        'Your conversations and messages (they disappear for the other people too)',
+      ],
+      password: 'Your password',
+      confirmLabel: 'Type DELETE to confirm',
+      confirmWord: 'DELETE',
+      cancel: 'Cancel',
+      confirm: 'Delete account',
+      deletedToast: 'Your account was deleted',
     },
     blocked: {
       title: 'Blocked users',
@@ -690,6 +800,9 @@ export const texts = {
     too_common: 'This password is too common',
     entirely_numeric: "Password can't be only digits",
     too_similar: 'This password is too similar to your email or name',
+    too_weak: 'This password is too weak. Make it at least Medium (see the hint below)',
+    same_as_old: 'The new password must be different from the current one',
+    incorrect: 'Incorrect password',
     read_only_field: 'This field cannot be changed',
     // Общие ошибки запроса
     invalid_credentials: 'Incorrect email or password',
@@ -717,6 +830,7 @@ export const texts = {
     usernameChecking: 'Please wait, checking the username…',
     emailInvalid: 'Please enter a valid email',
     passwordShort: 'Password must be at least 8 characters',
+    passwordWeak: 'This password is too weak. Make it at least Medium (see the hint below)',
     passwordLong: 'Password is too long',
     dateRequired: 'Please enter your date of birth (day, month, year)',
     dateInvalid: 'This date does not exist',

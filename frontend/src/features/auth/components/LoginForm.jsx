@@ -71,12 +71,16 @@ export default function LoginForm({ onSuccess }) {
         <Field
           label={t.password}
           type="password"
+          revealable
           placeholder={t.passwordPlaceholder}
           autoComplete="current-password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           error={errors.password}
         />
+        <p className={styles.forgot}>
+          <Link to="/forgot-password">{texts.passwordReset.forgotLink}</Link>
+        </p>
         <Button type="submit" fullWidth loading={loading}>
           {t.submit}
         </Button>

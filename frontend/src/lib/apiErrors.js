@@ -25,3 +25,9 @@ export function errorText(value, limits) {
   if (typeof value === 'string') return resolve(texts.validation[value], limits) ?? value;
   return fieldErrorText(value, limits);
 }
+
+// Текст первой серверной ошибки поля формы (ApiError.fields[name]) или undefined, если по полю ошибки нет
+export function serverFieldError(error, name, limits) {
+  const item = error.fields?.[name]?.[0];
+  return item ? fieldErrorText(item, limits) : undefined;
+}
