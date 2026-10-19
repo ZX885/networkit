@@ -85,3 +85,38 @@
   font-size: var(--text-xs);
   color: var(--danger);
 }
+
+/* Поле пароля с кнопкой «показать пароль» справа */
+.revealWrap {
+  position: relative;
+}
+
+.withReveal {
+  padding-right: var(--space-10);
+}
+
+/* Нативный глаз Edge/Chrome скрываем: кнопка одна, своя */
+.withReveal::-ms-reveal,
+.withReveal::-ms-clear {
+  display: none;
+}
+
+.reveal {
+  position: absolute;
+  top: 50%;
+  right: var(--space-1);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--control-md);
+  height: var(--control-md);
+  transform: translateY(-50%);
+  border: none;
+  border-radius: var(--radius-md);
+  background: none;
+  color: var(--text-muted);
+}
+
+.reveal:hover {
+  color: var(--text);
+}

@@ -138,6 +138,8 @@ AUTH_PASSWORD_VALIDATORS = [
     },
     {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
+    # Слабый пароль (Weak) отклоняется, нужен минимум Medium: apps/users/password_strength.py
+    {"NAME": "apps.users.password_validators.PasswordStrengthValidator"},
 ]
 
 # В тестах используем быстрый (небезопасный) хэш: настоящий PBKDF2 делает тесты в разы медленнее

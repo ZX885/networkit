@@ -431,7 +431,7 @@ PUT/DELETE избранного и блокировок идемпотентны
 | Поле | Правило | Код ошибки |
 |---|---|---|
 | email | валидный формат, ≤254, нормализация: `strip` + нижний регистр, уникален без учёта регистра | `invalid`, `taken` (при регистрации не раскрывается — см. §3.2) |
-| password | ≥8 символов, ≤128; Django-валидаторы: не слишком похож на email/имя, не из списка распространённых, не только цифры | `too_short`, `too_common`, `entirely_numeric`, `too_similar` |
+| password | ≥8 символов, ≤128; Django-валидаторы: не слишком похож на email/имя, не из списка распространённых, не только цифры; **сила не ниже Medium** (см. ниже) | `too_short`, `too_common`, `entirely_numeric`, `too_similar`, `too_weak` |
 | username | `^[a-z][a-z0-9_]{2,29}$` (3–30, начинается с буквы, только строчные латинские, цифры, `_`); приводится к нижнему регистру; нет `__`; не из зарезервированных (`admin`, `api`, `me`, `settings`, `login`, `register`, `support`, `staff`, `networkit`, …) | `invalid_format`, `reserved`, `taken` |
 | first_name / last_name | 1–60 после `strip`; только буквы Unicode, пробел, дефис, апостроф, точка; без `<`, `>`, управляющих символов | `required`, `too_long`, `invalid_characters` |
 | date_of_birth | формат `YYYY-MM-DD`; не в будущем; возраст на дату регистрации **≥16** и ≤100 | `invalid`, `too_young`, `too_old` |
@@ -460,6 +460,12 @@ PUT/DELETE избранного и блокировок идемпотентны
 Все строки перед проверкой проходят `strip`; значения HTML не санитизируются на сервере (хранятся как текст) — безопасность вывода обеспечивает React (никакого `dangerouslySetInnerHTML`) и ограничения формата выше.
 
 ---
+
+**Сила пароля (Weak / Medium / Strong).** Слабый пароль отклоняется, принимаются Medium и Strong. Формула единая для сервера (`apps/users/password_strength.py`, валидатор `apps.users.password_validators.PasswordStrengthValidator` в `AUTH_PASSWORD_VALIDATORS`) и frontend (`frontend/src/lib/passwordStrength.js`). Длина считается в кодовых точках Unicode; классы символов: строчные, заглавные, цифры, прочие (пробел, знаки, иероглифы, эмодзи).
+- **Weak:** длина < 8, или классов < 2, или разных символов < 4 (`aaaaaaa1` — Weak).
+- **Strong:** (длина ≥ 12 и классов ≥ 3) или (длина ≥ 16 и классов ≥ 2).
+- **Medium:** всё остальное.
+Внутри Django код ошибки `password_too_weak`, клиенту приходит `too_weak` (как `password_too_short` → `too_short`). Текст ошибки не содержит пароля. Таблица проверочных паролей: `backend/apps/users/tests/password_cases.json` (её читают тесты Django и проверка frontend).
 
 ## 6. Правила приватности
 

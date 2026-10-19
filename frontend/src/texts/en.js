@@ -5,6 +5,21 @@ export const texts = {
   common: {
     loading: 'Loading',
     optional: '(optional)',
+    showPassword: 'Show password',
+    hidePassword: 'Hide password',
+  },
+
+  // Индикатор силы пароля (components/ui/PasswordStrength.jsx); формула — lib/passwordStrength.js
+  passwordStrength: {
+    prefix: 'Password strength:',
+    levels: { weak: 'Weak', medium: 'Medium', strong: 'Strong' },
+    hints: {
+      minLength: 'Use at least 8 characters',
+      addClass: 'Add a number, a capital letter or a symbol',
+      moreVariety: 'Use at least 4 different characters',
+      addSymbolOrNumber: 'Add a capital letter, a number or a symbol to make it stronger',
+      moreLength: 'Use 12 or more characters to make it stronger',
+    },
   },
 
   nav: {
@@ -644,6 +659,7 @@ export const texts = {
     too_common: 'This password is too common',
     entirely_numeric: "Password can't be only digits",
     too_similar: 'This password is too similar to your email or name',
+    too_weak: 'This password is too weak. Make it at least Medium (see the hint below)',
     read_only_field: 'This field cannot be changed',
     // Общие ошибки запроса
     invalid_credentials: 'Incorrect email or password',
@@ -671,6 +687,7 @@ export const texts = {
     usernameChecking: 'Please wait, checking the username…',
     emailInvalid: 'Please enter a valid email',
     passwordShort: 'Password must be at least 8 characters',
+    passwordWeak: 'This password is too weak. Make it at least Medium (see the hint below)',
     passwordLong: 'Password is too long',
     dateRequired: 'Please enter your date of birth (day, month, year)',
     dateInvalid: 'This date does not exist',
